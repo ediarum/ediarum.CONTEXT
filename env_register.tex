@@ -1,0 +1,102 @@
+\startenvironment env_register % Zum Einlesen des Registers
+\project project_ediarum_context
+
+%% ##################################################################
+%% ##                       Basiselemente                          ##
+%% ##################################################################
+
+%% Generelle Registrierung des xml-Markups
+\startxmlsetups xml:register:setups
+	%% Dabei muss darauf geachtet werden, dass sich die Bestimmungen hier nicht mit dem eigentlichen Transformationsrichtlinien überschneiden.
+	\xmlsetsetup{register}{*}{-}
+	\xmlsetsetup{register}{register}{xml:register:root}
+	\xmlsetsetup{register}{register/eintrag}{xml:register:eintrag}
+\stopxmlsetups
+
+%% Das Setup muss registriert werden
+\xmlregisterdocumentsetup{register}{xml:register:setups}
+
+%% ##################################################################
+%% ##                          Elemente                            ##
+%% ##################################################################
+
+%% Die Wurzel wird weiterverarbeitet
+\startxmlsetups xml:register:root
+	%% Das Register wird zweispaltig in kleinerer Schrift gesetzt.
+	\startcolumns[n=2,distance=10mm,tolerance=verytolerant,align=flushleft]
+	\bgroup
+	\switchtobodyfont[9pt]
+	\xmlflush{#1}
+	\egroup
+	\stopcolumns
+\stopxmlsetups
+
+%% Jeder Eintrag wird ..
+\startxmlsetups xml:register:eintrag
+	%% .. mit dem Stichwort als Überschrift ..
+	\FSBregistereintrag{\xmlcommand{#1}{./stichwort}{xml:register:eintrag:stichwort}}
+	%% .. und Briefverweisen als Inhalt gesetzt.
+	\xmlcommand{#1}{./brief}{xml:register:eintrag:brief}
+	\par
+	%% Nach dem Ende des Eintrages werden evtl. Subeinträge verarbeitet.
+	\xmlcommand{#1}{./eintrag}{xml:register:eintrag:eintrag}
+\stopxmlsetups
+
+%% Der Eintragstitel wird gedruckt.
+\startxmlsetups xml:register:eintrag:stichwort
+	\xmlflush{#1}
+\stopxmlsetups
+
+%% Für jeden Brief ..
+\startxmlsetups xml:register:eintrag:brief
+	%% .. wird die Briefnummer gedruckt, und zwar kursiv, wenn nur Apparatverweise vorliegen.
+	\xmldoifelse{#1}{./zeile[@stelle='text']}
+		{\xmlatt{#1}{nummer}}
+		{{\it\xmlatt{#1}{nummer}}}%
+	%% Für die erste Textstelle wird die Zeile gedruckt ..
+	\xmlcommand{#1}{./zeile[position()=1]}{xml:register:eintrag:brief:zeile}%
+	%% .. und mit vorangehendem Punkt die weiteren Zeilennummern.
+	\xmlcommand{#1}{./zeile[position()>1]}{xml:register:eintrag:brief:zeilepunkt}%
+	\space
+\stopxmlsetups
+
+%% Wenn auf eine Stelle im Apparat verwiesen wird, wird der Zeilenbereich kursiv gedruckt, sonst normal.
+\startxmlsetups xml:register:eintrag:brief:zeile
+	\doifelse{\xmlatt{#1}{stelle}}{apparatus}
+		%% In Einträgen in Apparaten steht im start und stop-Attribut jeweils der schon fertig formatierte Zeilenbereich, daher muss FSBlinesetup nicht aufgerufen werden.
+		{\bgroup\switchtobodyfont[8pt]\low{\it\xmlatt{#1}{start}}\egroup}%
+		%{\bgroup\switchtobodyfont[8pt]\low{\it\FSBlinesetup{1}{\xmlatt{#1}{start}}{1}{\xmlatt{#1}{stop}}}\egroup}%
+		{\bgroup\switchtobodyfont[8pt]\low{\FSBlinesetup{1}{\xmlatt{#1}{start}}{1}{\xmlatt{#1}{stop}}}\egroup}%
+\stopxmlsetups
+
+%% Wenn auf eine Stelle im Apparat verwiesen wird, wird der Zeilenbereich mit vorangehendenem Punkt kursiv gedruckt, sonst normal.
+\startxmlsetups xml:register:eintrag:brief:zeilepunkt
+	\doifelse{\xmlatt{#1}{stelle}}{apparatus}
+		%% In Einträgen in Apparaten steht im start und stop-Attribut jeweils der schon fertig formatierte Zeilenbereich, daher muss FSBlinesetup nicht aufgerufen werden.
+		{\bgroup\switchtobodyfont[8pt]\low{.\it\xmlatt{#1}{start}}\egroup}%
+		%\bgroup\switchtobodyfont[8pt]\low{.\it\FSBlinesetup{1}{\xmlatt{#1}{start}}{1}{\xmlatt{#1}{stop}}}\egroup}%
+		{\bgroup\switchtobodyfont[8pt]\low{.\FSBlinesetup{1}{\xmlatt{#1}{start}}{1}{\xmlatt{#1}{stop}}}\egroup}%
+\stopxmlsetups
+
+
+%% Jeder Subeintrag wird ..
+\startxmlsetups xml:register:eintrag:eintrag
+	%% .. mit dem Stichwort als Überschrift ..
+	\FSBregistersubeintrag{\xmlcommand{#1}{./stichwort}{xml:register:eintrag:stichwort}}
+	%% .. und Briefverweisen als Inhalt gesetzt.
+	\xmlcommand{#1}{./brief}{xml:register:eintrag:brief}
+	\par
+	%% Nach dem Ende des Subeintrages werden evtl. Subsubeinträge verarbeitet.
+	\xmlcommand{#1}{./eintrag}{xml:register:eintrag:eintrag:eintrag}
+\stopxmlsetups
+
+%% Jeder Subsubeintrag wird ..
+\startxmlsetups xml:register:eintrag:eintrag:eintrag
+	%% .. mit dem Stichwort als Überschrift ..
+	\FSBregistersubsubeintrag{\xmlcommand{#1}{./stichwort}{xml:register:eintrag:stichwort}}
+	%% .. und Briefverweisen als Inhalt gesetzt.
+	\xmlcommand{#1}{./brief}{xml:register:eintrag:brief}
+	\par
+\stopxmlsetups
+
+\stopenvironment

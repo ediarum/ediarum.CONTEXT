@@ -1,0 +1,292 @@
+\startenvironment env_lua % Der Lua-Code, der ConTeXtzugriff steht am Ende der Datei
+\project project_ediarum_context
+
+\startluacode
+--% #################################################################
+--% ##                    Externe Dateien                          ##
+--% #################################################################
+
+--% Die Variable beinhaltet den Namen der externen Datei.
+outputfile = ''
+
+--% Erstellt eine neue Datei und setzt sie als externe Datei.
+--% 'filename' Der Name der neuen Datei
+function newFile(filename)
+	outputfile = filename
+    local f = assert(io.open(outputfile, "w"))
+    f:close()
+end
+
+--% Schreibt den String in die gesetzte Datei.
+--% 'str' Der zu schreibende Text
+function writeFile(str)
+    local f = assert(io.open(outputfile, "a"))
+    f:write(str)
+    f:close()
+end
+
+--% Schreibt einen Zeilenumbruch in die gesetzte Datei.
+function writeFileNewline()
+    local f = assert(io.open(outputfile, "a"))
+    f:write('\n')
+    f:close()
+end
+
+--% Schreibt einen Tabulator in die gesetzte Datei.
+function writeFileNewtab()
+    local f = assert(io.open(outputfile, "a"))
+    f:write('\t')
+    f:close()
+end
+
+--% #################################################################
+--% ##                        Referenzen                           ##
+--% #################################################################
+
+--% Die Variablen beinhalten ..
+extfileID = '' --% .. die momentane DateiID
+extreff = {} --% .. ein Array für den Verweis auf die Datei (mit 'content') und die einzelnen Referenzen.
+
+--% Schreibt die momentane DateiID.
+function getExtFileID ()
+	context(extfileID)
+end
+
+--% Gibt die angeforderte Referenz mit Zeilennummern aus.
+--% 'fileID' Die ID der das Verweisziel beinhaltenden Datei
+--% 'elementID' Die ID des Verweiszieles
+function getExtRef (fileID,elementID)
+	--% Falls keine Datei mit der angebenen ID eingelesen wurde ..
+	if extreff[fileID]==nil then
+		--% .. wird eine Fehlermeldung zurückgegeben.
+		context('Referenz nicht gefunden: Datei: "'..fileID..'", Element: "'..elementID..'"')
+	--% Falls zwar die Datei, aber kein Element mit der ID eingelesen wurde, ..
+	elseif extreff[fileID][elementID]==nil then
+		--% .. wird auch eine entsprechende Fehlermeldung wiedergegeben.
+		context('Referenz nicht gefunden: Element "'..elementID..'"')
+	--% Wenn es sich bei dem angegebenen Element um einen Startanker handelt, ..
+	elseif string.sub(elementID,1,5)=='start' then
+		--% .. wird nach dem Stopanker gesucht.
+		local stopElement='stop'..string.sub(elementID,6,-1)
+		--% Existiert kein Stopanker, ..
+		if extreff[fileID][stopElement]==nil then
+			--% .. wird nur die Briefnummer und Zeile des Startankers ausgegeben, ..
+			context(extreff[fileID]['content']..', '..extreff[fileID][elementID])
+		else
+			--% .. ansonsten wird der Verweis auf den Abschnitt eingefügt.
+			context(extreff[fileID]['content']..', ')
+			linesetup(1,extreff[fileID][elementID]+0,1,extreff[fileID][stopElement]+0)
+		end
+	--% Wenn es sich um ein anderes Element handelt, ..
+	else
+		--% .. wird der entsprechende Verweis eingefügt.
+		context(extreff[fileID]['content']..', '..extreff[fileID][elementID])
+	end
+end
+
+--% Liefert vom übergebenen String den Pfad vor dem ersten '/#' bzw. den ganzen String zurück.
+--% 'ref' Der String mit einer Pfadangabe
+function getPath (ref)
+	if string.find(ref, '/#')==nil then
+		context(ref)
+	else
+		local i,j = string.find(ref, '/#')
+		context(string.sub(ref,1,i-1))
+	end
+end
+
+--% Liefert die Referenz hinter einem '/#' bzw. den ganzen String zurück.
+function getRef (ref)
+	if string.find(ref, '/#')==nil then
+		context(ref)
+	else
+		local i,j = string.find(ref, '/#')
+		context(string.sub(ref,j+1,-1))
+	end
+end
+
+--% Setzt eine neue DateiID fest und schreibt die Zitierweise in das Array extreff.
+--% 'fileID' Die neue DateiID
+--% 'content' Die Zitat zu der Datei
+function setExtFileRef (fileID,content)
+	--% Zu der DateiID wird ein neues Subarray erzeugt ..
+	extreff[fileID] = {}
+	--% Die DateiID wird als aktuelle festgelegt ..
+	extfileID = fileID
+	--% .. und die Zitierweise wird als content in das Array geschrieben.
+	extreff[fileID]['content'] = content
+end
+
+--% Schreibt eine Zitat für ein bestimmtes Element in das Array extreff.
+--% 'fileID' Die zum Zitat gehörige Datei
+--% 'elementID' Das zum Zitat gehörige Element
+--% 'content' Das Zitat
+function setExtRef (fileID,elementID,content)
+	extreff[fileID][elementID]=content
+end
+
+--% #################################################################
+--% ##                         Sonstiges                           ##
+--% #################################################################
+
+--% Interpretiert Wikischreibweise in ConTeXt.
+--% 'str' Der zu interpretierende String
+function wikitotex(str)
+	--% Unterstrichener, kursiver und fetter Modus sind nicht gesetzt ..
+	ul, it, bf = 0, 0, 0
+	--% .. und bisher wurde nichts geschrieben.
+	strtex = ''
+	--% Für jeden Buchstaben des Strings ..
+	for i=1, string.len(str) do
+		ch = string.sub(str, i, i)
+		--% .. wird geprüft, ob es ein Unterstrich ist ..
+		if ch=='_' then
+			--% .. (das hieße, wenn der Kursivmodus noch nicht gesetzt ist, ..
+			if ul==0 then
+				--% .. daß ab sofort alles kursiv gesetzt wird, ..
+				strtex=strtex..'\\FSBgesperrt{ '
+				ul=1
+			else
+				--% .. und daß der Modus sonst beendet wird).
+				strtex=strtex..'}'
+				ul=0
+			end
+		--% Genauso wird geprüft, ob es sich bei dem Zeichen um ein Sternchen handelt, ..
+		elseif ch=='*' then
+			--% .. mit dem für den fetten Modus in obiger Weise verfahren wird, ..
+			if bf==0 then
+				strtex=strtex..'{\\bf '
+				bf=1
+			else
+				strtex=strtex..'}'
+				bf=0
+			end
+		--% .. oder um einen Slash, ..
+		elseif ch=='/' then
+			--% der für den kursiven Modus steht.
+			if it==0 then
+				strtex=strtex..'{\\it '
+				it=1
+			else
+				strtex=strtex..'}'
+				it=0
+			end
+		--% Ist es ein anderes Zeichen ..
+		else
+			-- .. wird es einfach an die Ausgabe angehängt.
+			strtex=strtex..ch
+		end
+	end
+	--% Die fertige Ausgabe wird schließlich mit ConTeXt gedruckt.
+	context(strtex)
+end
+
+--% #################################################################
+--% ##                     Zeilennummerierung                      ##
+--% #################################################################
+
+--% Die Variablen sind ..
+linerefebene = 1 --% .. die Tiefe der Verschachtelung von Zeilenreferenzen, ..
+linerefno = 0 --% .. die Nummer der Zeilenreferenz ..
+linerefnokorr = {0} --% .. und die Korrektur für jede Ebene als Array.
+
+--% Die aktuelle Zeilenreferenznummer wird ausgegeben, dabei wird eine evtl. Ebenenkorrektur berücksichtigt.
+function getLinerefno()
+		context(linerefno-linerefnokorr[linerefebene])
+end
+
+--% Der Umgang mit Zeilen- und Seitenspannen wird hier konfiguriert und die Spanne entsprechend ausgegeben.
+--% 'page1' Die Seitennummer am Anfang der Spanne
+--% 'line1' Die Zeilennummer am Anfang der Spanne
+--% 'page2' Die Seitennummer am Ende der Spanne
+--% 'line2' Die Zeilennummer am Ende der Spanne
+function linesetup(page1,line1,page2,line2)
+	--% Da hier die Zeilen pro Brief gezählt werden, ist keine Unterscheidung nach Seitenzahl notwendig.
+--	if page1==page2 then
+		--% Falls es der Abschnitt in der selben Zeile endet, wie er beginnt, ..
+		if line1==line2 then
+			--% .. wird diese Zeile ausgegeben.
+			tex.sprint(line1)
+		--% Endet der Abschnitt eine Zeile nach Beginn, ..
+		elseif line1+1==line2 then
+			--% .. wird hinter einem kleinen Abstand hinter der Zeilennummer ein 'f' ergänzt.
+			tex.sprint(line1..' f')
+		--% Bei einem längeren Abschnitt ..
+		else
+			--% .. werden Anfang und Ende durch einen Strich verbunden.
+			tex.sprint(line1..'–'..line2)
+		end
+--	else
+--		tex.sprint(line1..'–S.'..page2..'.'..line2)
+--	end
+end
+
+--% Die nächste Zeilenreferenznummer wird aufgerufen.
+function nextLinerefno()
+	--% Der Zähler wird um eins erhöht.
+	linerefno = linerefno +1
+	--% Für alle Verschachtelungsebenen unter dieser ..
+	for i=1,linerefebene do
+		--% wird die Korrektur um eins erhöht.
+		linerefnokorr[i] = linerefnokorr[i] +1
+	end
+	--% Die Korrektur auf der aktuellen Ebene wiederum fällt weg.
+	linerefnokorr[linerefebene] = 0
+end
+
+--% Die Seitenzahl der Referenz wird ausgegeben.
+function pagenumber(ref_one)
+	local one, bug = structures.references.identify("",ref_one)
+	if bug then
+--		tex.sprint("[unknown reference: %s]",ref_one)
+--		return
+	end
+	structures.references.analyze(one)
+	tex.sprint(one.realpage)
+end
+
+--% Es wird in ein höhere Verschachtelungsebene gewechselt.
+function startLinerefebene()
+	--% Der Zähler wird entsprechend erhöht.
+	linerefebene = linerefebene +1
+	--% In der neuen Ebene ist noch keine Korrektur nötig.
+	linerefnokorr[linerefebene] = 0
+end
+
+--% Es wird wieder in eine tiefere Verschachtelungsebene gewechselt.
+function stopLinerefebene()
+	linerefebene = linerefebene -1
+end
+
+\stopluacode
+
+%% ##################################################################
+%% ##                       Definitionen                           ##
+%% ##################################################################
+
+%% Externe Dateien
+\def\LUAnewfile#1{\ctxlua{newFile('#1')}} % filename % erstellt eine neue Datei als zusätzlichen Output
+\def\LUAwritefile#1{\ctxlua{writeFile('#1')}} % text % schreibt in die gesetzte Datei
+\def\LUAwritefilelf{\ctxlua{writeFileNewline()}} % schreibt einen Zeilenumbruch in die gesetzte Datei
+\def\LUAwritefiletab{\ctxlua{writeFileNewtab()}} % schreibt einen Tabulator in die gesetzte Datei
+
+%% Referenzen
+\def\LUAgetextfileid{\ctxlua{getExtFileID()}} % gibt die aktuelle DateiID aus
+\def\LUAgetextref#1#2{\ctxlua{getExtRef('#1','#2')}} % fileID elementID % gibt zur angegebenen Datei und Element das Zitat aus
+\def\LUAgetpath#1{\ctxlua{getPath('#1')}} % reference % gibt nur die Pfadangabe der Referenz aus
+\def\LUAgetref#1{\ctxlua{getRef('#1')}} % reference % gibt nur das Element der Referenz aus
+\def\LUAsetextfileref#1#2{\ctxlua{setExtFileRef('#1','#2')}} % fileID content % setzt zu einer Datei das Zitat fest
+\def\LUAsetextref#1#2#3{\ctxlua{setExtRef('#1','#2','#3')}} % fileID elementID content % setzt zu einem Element das Zitat fest
+
+%% Sonstiges
+\def\LUAwikitotex#1{\ctxlua{wikitotex("#1")}} % text % interpretiert Wikischreibweise in ConTeXt
+
+%% Zeilennummerierung
+\def\LUAlinerefno{\ctxlua{getLinerefno()}} % definiert einen Zähler für Zeilenmarkierungen
+\def\LUAlinesetup#1#2#3#4{\ctxlua{linesetup(#1,#2,#3,#4)}} % startpage startline stoppage stopline % bestimmt wie mit zeilen- und seitenumfassenden Zitatspannen umgegangen wird
+\def\LUAnextlineref{\ctxlua{nextLinerefno()}} % erhöht den Zähler für Zeilenmarkierungen
+\def\LUApagenumber#1{\ctxlua{pagenumber("#1")}} % refnr % gibt die Seitenzahl der Referenz wieder
+\def\LUAstartlinerefebene{\ctxlua{startLinerefebene()}} % startet eine neue Verschachtelungsebene
+\def\LUAstoplinerefebene{\ctxlua{stopLinerefebene()}} % beendet eine Verschachtelungsebene
+
+\stopenvironment

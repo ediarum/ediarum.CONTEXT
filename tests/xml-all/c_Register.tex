@@ -1,0 +1,15 @@
+\startcomponent c_Register % Erstellt das Register
+\product prd_document
+\project project_ediarum_context
+
+\starttext
+	\page[yes]
+	\midaligned{\switchtobodyfont[12pt]\it Register der Namen und Werke}
+	
+	\blank[2*big]
+	
+	\xmlprocessfile{register}{register.xml}{}	
+	
+\stoptext
+
+\stopcomponent

@@ -1,0 +1,471 @@
+\startenvironment env_setups % Die Setups
+\project project_ediarum_context
+
+%% ##################################################################
+%% ##                     Externe Dateien                          ##
+%% ##################################################################
+
+%% Hier wird definiert, wo \product und \component nach TeX input files suchen sollen.
+\usepath[{ethik,Vorlesungen}]
+\usesubpath[{../xml}]
+
+%% Ebenso wird hier definiert, wo nach Bildern gesucht werden soll.
+\doifmodeelse{*product}
+	{\setupexternalfigures[directory={../general_img}]}
+	{\setupexternalfigures[directory={../general_img, img}]}
+
+%% ##################################################################
+%% ##                         Schriften                            ##
+%% ##################################################################
+
+%% Die Module müssen evtl. bei Formeln benutzt werden, sind hier aber überflüssig.
+% \usemodule[simplefonts]
+% \usemodule[fnt-25]
+
+%% Das ist eine Definition einer Schrift ohne Kerning und Ligaturen für gesperrten Schriftsatz, ..
+\definefont[SETserifkerning][Serif*none]
+%% .. der hier definiert wird mit einer Methode, die LuaTex nutzt.
+%\def\SETgesperrt#1{{\SETserifkerning\setuptolerance[space]\kerncharacters[0.2]#1}}
+\def\SETgesperrt#1{{\SETserifkerning\kerncharacters[0.2]#1}}
+
+%% Alle notwendigen Systemschriften werden für die Benutzung definiert, ..
+\setupbodyfont[gentium] %.. zunächst Gentium, die griechische Zeichen enthält, ..
+\setupbodyfont[modern] % .. dann als vorläufigen Hauptfont Modern.
+%% Dies geschieht eigentlich über:
+% \setmainfont[garamond] *** TODO ***************************************************************************
+% \setupbodyfont[garamond]
+% \definefontsynonym[Serif][Garamond]
+	% Wobei die Schrift der Schleiermacherausgabe eigentlich Sabon ist.
+
+%% Die Schriftgröße wird auf 11 gesetzt.
+\setupbodyfont[11pt]
+
+%% ##################################################################
+%% ##                      Sonderzeichen                           ##
+%% ##################################################################
+
+%% Die verwendeten Sonderzeichen sind ..
+\def\SETlang{$\langle$}%〈} % .. die stumpfe Klammer links ..
+\def\SETrang{$\rangle$}%〉} % .. und rechts, ..
+\def\SETlfloor{$\lfloor$} % .. der Winkel links unten ..
+\def\SETrceil{$\rceil$} % .. und rechts oben.
+
+%% ##################################################################
+%% ##                        Seitenlayout                          ##
+%% ##################################################################
+
+%% Die Seitengröße für den Druck wird zunächst definiert, ..
+\definepapersize[SETdruckedition][width=159mm,height=238mm]
+%% .. und dann auf DIN A4 gedruckt.
+\setuppapersize[SETdruckedition][A4]%[SETdruckedition]
+
+%% Auf eine Seitennummerierung wird zunächst verzichtet, aber nicht auf ein 2-seitiges Layout.
+\setuppagenumbering[alternative=doublesided,location=]
+
+%% Schließlich wird festgelegt, dass ..
+ \setuplayout[location=middle, % .. der Druck mittig auf der Seite erscheinen soll, ..
+	width=112mm, % .. weiterhin werden die Textbreite, ..
+	topspace=17mm, % .. die Höhe über der Kopfzeile, ..
+	bottomspace=34mm, % .. die Höhe unter der Fußzeile, ..
+	headerdistance=5mm, % .. der Abstand zwischen Kopfzeile und Text, ..
+	header=3mm, % .. die Höhe der Kopfzeile ..
+	footer=0mm, %.. die Höhe der Fußzeile ..
+	height=187mm, % .. die Gesamthöhe von Kopfzeile bis Fußzeile, ..
+	backspace=20mm, % .. sowie der Abstand zwischen Innenrand und Text definiert, ..
+	marking=on] % .. weiterhin soll die Druckränder auf der Druckseite sichtbar sein.
+
+%% Mit diesem Befehl können die unsichtbaren Ränder von Elementen sichtbar gemacht werden:
+% \showstruts
+% \showframe
+
+%% ##################################################################
+%% ##                         Sprachen                             ##
+%% ##################################################################
+
+%% Für den Satz und die Trennung wird die Sprache angegeben.
+\mainlanguage[de]
+\setuplanguage[de][patterns={de,agr}]
+
+%% Ein Schalter für griechische Worte wird eingeführt.
+\def\SETgreek#1{\language[agr]\gentium #1}
+
+%% ##################################################################
+%% ##                       Paragraphen                            ##
+%% ##################################################################
+
+%% Es wird ein mittlerer Einzug definiert, der zunächst abgeschaltet ist.
+\setupindenting[no,medium,first]
+%% Der Wortabstand wird als tolerant gesetzt, damit es keine überstehenden Zeilenenden gibt.
+\setuptolerance[horizontal,tolerant]
+%% Für schmale Passagen wird der Randabstand definiert.
+% \setupnarrower[left=6mm]
+
+%% Hier wird ein mehrspaltiges Layout definiert.
+% \defineparagraphs[SETzweispalten]
+	% [n=2, % Es hat zwei Spalten ..
+	% before=, after=, distance=4mm] % .. mit eine kleinen Abstand zueinander.
+%% Die erste dieser Spalten ..
+% \setupparagraphs[SETzweispalten][1]
+	% [width=54mm,align=left,style=it] % .. wird hier mit Breite, Ausrichtung und Textstyle definiert.
+%% Das Layout kann aufgerufen werden, indem man schreibt
+%% \FSBzweispalten Text der Spalte 1\\ Text der Spalte 2\\
+
+%% ##################################################################
+%% ##                        Kopfzeile                             ##
+%% ##################################################################
+
+%% Die Kopfzeile wird eingerichtet.
+\setupheader[text]
+	[after=]%,style={\switchtobodyfont[10pt]}]
+
+%% Hier wird der Inhalt der Kopfzeile definiert.
+\setupheadertexts[\setups{SETrightpage}][][][\setups{SETleftpage}]
+
+%% Um auf die notwendigen Informationen zurückgreifen zu können, müssen diese mit /marking gesetzt worden sein.
+%% Dabei stehen auf der linken Seite ..
+\startsetups[SETrightpage]
+	% .. links die Seitenzahl ..
+	\rlap{\bgroup\switchtobodyfont[10pt] \pagenumber\egroup}
+	\hfill
+	% .. und in der Mitte die aktuelle Briefnummer.
+	%\expanded{\bgroup\switchtobodyfont[10pt] \it \getmarking[FSBbriefnummer][current]\egroup}# % origianal
+	\expanded{\bgroup\switchtobodyfont[10pt] \it \getmarking[FSBnotebooktitle][current]\egroup} % geändert Althof für Gödel
+	\hfill
+	\llap{}
+\stopsetups
+%% Auf der rechten Seite stehen ..
+\startsetups[SETleftpage]
+	\rlap{}
+	\hfill
+	% .. in der Mitte das aktuelle Briefdatum ..
+	\expanded{\bgroup\switchtobodyfont[10pt] \it \getmarking[FSBbriefnummer][current]\egroup}
+	\hfill
+	% .. und rechts die Seitenzahl.
+	\llap{\bgroup\switchtobodyfont[10pt] \pagenumber\egroup}
+\stopsetups
+%% *** TODO **********************************************************************************************
+%% Eigentlich sollen links in der Mitte die Briefnummern der Doppelseite, bzw. bei einem Brief noch in Klammern der Absender stehen.
+%% Und rechts sollen in der Mitte die Datumsangaben bzw. die Datumsspanne der Briefe auf der Doppelseite stehen.
+
+%% ##################################################################
+%% ##                     Zeilennummerierung                       ##
+%% ##################################################################
+
+%% Zunächst wird die Standardnummerierung eingerichtet, ..
+\setuplinenumbering[FSBdefaultlinenumbering]
+	[location=inner, % .. sie befindet sich innen, ..
+	step=5, % .. nummeriert jede fünte Zeile, ..
+	method=text, % .. ??
+	style={\switchtobodyfont[9pt]}, % .. der Zahlenstil wird festgelegt, ..
+	align={\SETinner}, % .. diese sind nach außen ausgerichtet, ..
+	distance=3mm, % .. haben einen kleinen Abstand zum Text,
+	width=3mm] % .. und eine reserviert Breite.
+%% Die Ausrichtung der Zeilennummern wechselt je nach Seite.
+\def\SETinner{\doifoddpageelse{left}{right}}
+
+%% Wenn Zeilen mit \startline[ID] und \stopline[ID] markiert worden sind, kann hiermit wieder auf sie verwiesen werden.
+\def\SETlinenumbers#1{%
+	{% Falls der Startanker gefunden wurde, der mit lr:b: beginnt, ..
+	\doifreferencefoundelse{lr:b:#1}
+		{% .. wird dieser in eine lokale Variable eingelesen.
+		\edef\fline{\currentreferencelinenumber}%
+		% Das gleiche passiert mit dem Stopanker.
+		\doifreferencefoundelse{lr:e:#1}
+			{\edef\tline{\currentreferencelinenumber}%
+			% Und schließlich wird der Zeilenbereich gemäß dem Setup zurückgegeben.
+			\FSBlinesetup{\FSBpagenumber{lr:b:#1}}{\fline}{\FSBpagenumber{lr:e:#1}}{\tline}
+			}%
+			{% Falls eine der Referenzen nicht gefunden wurde, gibt es eine Fehlermeldung ..
+			\unknownreference{#1}% .. im Protokoll ..
+			{UNB REF: 'lr:e:#1'}% .. und im Text.
+			}%
+		}%
+		{\unknownreference{#1}{UNB REF: 'lr:b:#1'}}%
+	}}
+
+%% Hiermit wird die Zeilenzählung wieder auf Null gesetzt.
+\def\SETresetlinenumbering[#1]{%
+	\startlinenumbering[#1]%
+	\stoplinenumbering%
+	}
+
+%% ##################################################################
+%% ##                        Apparate                              ##
+%% ##################################################################
+
+%% Der Textapparat wird definiert.
+\def\SETtextapparat#1#2#3#4{% 1:im Text 2:Lemma 3:Aussage 4:Wort
+	% Falls kein eigener Textapparat gedruckt werden soll, weil es bereits einen gibt, wird nur der Text gedruckt.
+	\doifmodeelse{keinTextapparat}
+		{#1}
+	% Falls es einen Apparateintrag zu einem Lemma gibt, wird dieser dort nur angehängt.
+	{\doifmodeelse{inLemma}
+		{#2] {\it\nospace #3} #4\enablemode[lemmaSet]}
+	% Falls es einen Apparateintrag zu einem Apparateintrag gibt, wird dieser dort nur angehängt.
+	{\doifmodeelse{inApparat}
+		{#2 {\it #3} #4}
+	% Falls keiner der obigen Fälle zutrifft, wird ein einfacher Textapparat erstellt.
+		{% Zunächst wird sichergestellt, dass vorherige Leerzeichen nicht gelöscht werden.
+		\ifhmode\kern\zeropoint\fi%
+		% Dann wird die Referenznummer erhöht ..
+		\FSBnextlineref{}%
+		% .. und ein Textapparat ..
+		\FSBdotextapparat{%
+			% .. mit Zeilenreferenz, ..
+			{\bf \FSBlinenumbers{\FSBlinerefno}}%
+			% .. Lemma ..
+			\enablemode[inLemma]%
+			% .. (die abschließende Klammer des Lemmas wird nur gedruckt, wenn nicht noch ein anderes Lemma angefügt wurde) ..
+			#2\doifmodeelse{lemmaSet}{}{]\disablemode[lemmaSet]}
+			\disablemode[inLemma]%
+			% .. und Apparateintrag wird erzeugt.
+			\enablemode[inApparat]%
+			{\it #3}
+			#4
+			\disablemode[inApparat]%
+			}%
+		% Schließlich wird der Textinhalt gedruckt, ..
+		\FSBzeile{\enablemode[keinTextapparat]#1\disablemode[keinTextapparat]}%
+		% .. oder, falls es keinen gibt, nicht.
+		\doifempty{#1}{\nospace}%
+		}%
+	}}%
+	}
+
+%% Sehr viel kürzer ist der Sachapparat ohne Lemma.
+\def\SETsachapparat#1#2{% 1:im Text 2:Aussage
+	% Zunächst wird sichergestellt, dass vorherige Leerzeichen nicht gelöscht werden.
+	\ifhmode\kern\zeropoint\fi%
+	% Dann wird die Referenznummer erhöht ..
+	\FSBnextlineref{}%
+	% .. und ein Sachapparat ..
+	\FSBdosachapparat{
+		% .. mit Zeilenreferenz ..
+		{\bf \FSBlinenumbers{\FSBlinerefno}}%
+		% .. und kursivem Apparateintrag wird erzeugt.
+		\enablemode[FSBinSachapparat]%
+		{\it #2}%
+		\disablemode[FSBinSachapparat]%
+		}%
+	% Schließlich wird der Textinhalt gedruckt.
+	\FSBzeile{#1}%
+	}
+
+%% Für die Fußnoten des Autors
+\def\SETfootnote#1{
+	\FSBdofootnote{\it #1}
+}
+
+%% Um auf einen Zeilenbereich referenzieren zu können, wird dieser hier mit Ankern gekennzeichnet.
+\def\SETzeile#1{%
+	% Der Startanker der Zeilenreferenzierung wird gesetzt, intern heißt die Referenz 'lr:b:\FSBlinerefno'.
+	\startline[\FSBlinerefno]{}%
+	% Damit sich überschneidende Zeilenreferenzierungen und \FSBlinerefno nicht behindern, wird in eine andere Ebene gewechselt, ..
+	\FSBstartlinerefebene%
+	% .. bevor der Inhalt gedruckt wird ..
+	#1%
+	% .. und die Ebene wieder beendet wird.
+	\FSBstoplinerefebene%
+	% Der Stopanker der Zeilenreferenzierung wird gesetzt, intern heißt die Referenz 'lr:e:\FSBlinerefno'.
+	\stopline[\FSBlinerefno]{}%
+	}
+
+%% Eine Definition, um die Fussnotenzahl zu unterdrücken. Man kann aber dies auch erreichen mit \footnote[-]{fussnote}.
+\def\SETleer#1{}
+
+%% Hier wird der Textapparat konfiguriert.
+\setupnote[FSBdotextapparat]
+	[rule=off, % Es gibt keine voreingestellte Linie.
+	paragraph=yes, % Die Einträge werden in einem Absatz gedruckt.
+	before={\bgroup\blank\hairline\vskip0.2em\egroup}, % Hier wird eine eigene Linie definiert.
+	after=, % Es folgt kein Abstand o.ä.
+	inbetween=\hskip5mm, % Zwischen den Einträgen ist ein kleiner Abstand.
+	% numbercommand=\FSBleer, % Die Nummer in der Fußnote wird unterdrückt.
+	textcommand=\FSBleer, % Die Nummer im Text wird unterdrückt.
+	style={\switchtobodyfont[9pt]}] % Der Schriftstil wird festgelegt.
+\setupnotation[FSBdotextapparat]
+	[numbercommand=\FSBleer, % Die Nummer in der Fußnote wird unterdrückt.
+	]
+%% Der folgende Befehl soll die Einträge hintereinander anlegen, scheint aber überflüssig.
+%%% \setupnotedefinition[FSBdotextapparat][location=serried]
+
+%% Hier wird der Sachapparat konfiguriert.
+\setupnote[FSBdosachapparat]
+	[rule=off, % Es gibt keine voreingestellte Linie.
+	paragraph=yes, % Die Einträge werden in einem Absatz gedruckt.
+	before={\vskip0.5em\hl[5]\vskip0.5em}, % Hier wird eine eigene Linie definiert.
+	after=, % Es folgt kein Abstand o.ä.
+	inbetween=\hskip5mm, % Zwischen den Einträgen ist ein kleiner Abstand.
+	% numbercommand=\FSBleer, % Die Nummer in der Fußnote wird unterdrückt.
+	textcommand=\FSBleer, % Die Nummer im Text wird unterdrückt.
+	style={\switchtobodyfont[9pt]}] % Der Schriftstil wird festgelegt.
+\setupnotation[FSBdosachapparat]
+	[numbercommand=\FSBleer, % Die Nummer in der Fußnote wird unterdrückt.
+	]
+%% Der folgende Befehl soll die Einträge hintereinander anlegen, scheint aber überflüssig.
+% \setupnotedefinition[FSBdosachapparat][location=serried]
+
+%% Die Fußnoten des Autors erscheinen als Fußnoten im Text.
+\setupnote[FSBdofootnote]
+	[rule=off,
+	paragraph=yes, % Die Einträge werden in einem Absatz gedruckt.
+	before={\blank\vskip5mm}, %{\vskip0.5em\hl[5]\vskip0.5em}, % Hier wird eine eigene Linie definiert.
+	after=, % Es folgt kein Abstand o.ä.
+	%before={\vskip3mm\startlinenumbering[FSBdefaultlinenumbering][continue]\noindenting}, % Vor den Noten gibt es einen kleinen Durchschuß, und die Zeilenzählung geht weiter ..
+	%after={\stoplinenumbering}, % .. und endet hinterher.
+	%location=text, % Die Noten werden im Text gedruckt.
+	%bodyfont=, % Ohne veränderte Schrift.
+	% numbercommand=\bf, % Die Nummer ist fett.
+	% margindistance=0mm, % Zum Rand gibt es keinen Abstand ..
+	style={\switchtobodyfont[9pt]}] % Der Schriftstil wird festgelegt.
+	%********** TODO ***************+
+	% Die Autorennote muss mit jedem Brief wieder von vorne zählen.
+	% Evtl. setupnotes[n=1] ? Vgl. \setupfootnotes
+\setupnotation[FSBdofootnote]
+	[numbercommand=\bf, % Die Nummer ist fett.
+	numberconversion=a, % Sie werden a, b, c nummeriert.
+	alternative=left,
+	margindistance=5mm, % Zum Rand gibt es einen Abstand ..
+	after=\hskip0.5em, % Abstand zum nächsten Element
+	]
+
+%% Der Fußnoteneintrag ist links ausgerichtet und hat einen kleinen Abstand zur Nummer.
+% \setupnotedefinition[FSBautornote][location=left,width=5mm]
+
+
+%% ##################################################################
+%% ##                         Referenzen                           ##
+%% ##################################################################
+
+\def\SETerror{UNB REF}
+%% Hier werden die Attribute für den Export vorbereitet
+\def\SETattribute#1#2{#1="#2"}
+
+%% Hiermit kann die Zeilennummer eines Elementes für die Zeilen-ID-Konkordanz exportiert werden.
+\def\SETexportelementline#1#2#3{% 1: Elementname 2:Attribute 3:Inhalt
+	% Die Referenznummer wird erhöht ..
+	\FSBnextlineref{}%
+	% .. der Zeilenbereich gedruckt ..
+	\FSBzeile{#3}%
+	% .. wenn der Zeilenreferenzen gefunden wurden ..
+	\doifreferencefoundelse{lr:b:\FSBlinerefno}
+		{\edef\fline{\currentreferencelinenumber}%
+		\doifreferencefoundelse{lr:e:\FSBlinerefno}
+			{\edef\tline{\currentreferencelinenumber}%
+			% .. wird das Element ..
+			\FSBfwriteT%
+			\FSBfwriteT%
+			\FSBfwrite{<#1 #2 line="}%
+			% .. mit der Zeilennummer exportiert.
+			\FSBfwrite{\FSBlinesetup{\FSBpagenumber{lr:b:\FSBlinerefno}}{\fline}{\FSBpagenumber{lr:e:\FSBlinerefno}}{\tline}}%
+			\FSBfwrite{"/>}%
+			\FSBfwriteN%
+			}
+			% Falls die Referenzen nicht gefunden wurden passiert nichts.
+			% Wenn hier ein zu lange Fehlermeldung auftauchte, störte dies die PDF-Erstellung; ebenso muß hier eine eigene Prüfung der Referenzen erfolgen, die direkte Nutzung von \FSBlinenumbers führt zu Fehlern.
+			{}%
+		}
+		{}%
+	}
+
+%% Hiermit kann die Zeilennummer eines Elementes, das sich in einer Fussnote befindet, für die Zeilen-ID-Konkordanz exportiert werden.
+\def\SETexportelementlineapparatus#1#2#3{% 1: Elementname 2:Attribute 3:Inhalt
+	% Die Referenznummer wird NICHT erhöht (sondern die letzte des Apparateintrags genutzt) ..
+	% .. der Zeilenbereich gedruckt ..
+	#3%
+	% .. wenn Zeilenreferenzen gefunden wurden ..
+	\doifreferencefoundelse{lr:b:\FSBlinerefno}
+		{\edef\fline{\currentreferencelinenumber}%
+		\doifreferencefoundelse{lr:e:\FSBlinerefno}
+			{\edef\tline{\currentreferencelinenumber}%
+			% .. wird das Element ..
+			\FSBfwriteT%
+			\FSBfwriteT%
+			\FSBfwrite{<#1 #2 line="}%
+			% .. mit der Zeilennummer exportiert.
+			\FSBfwrite{\FSBlinesetup{\FSBpagenumber{lr:b:\FSBlinerefno}}{\fline}{\FSBpagenumber{lr:e:\FSBlinerefno}}{\tline}}%
+			\FSBfwrite{" location="apparatus"/>}%
+			\FSBfwriteN%
+			}
+			% Falls die Referenzen nicht gefunden wurden passiert nichts.
+			% Wenn hier ein zu lange Fehlermeldung auftauchte, störte dies die PDF-Erstellung; ebenso muß hier eine eigene Prüfung der Referenzen erfolgen, die direkte Nutzung von \FSBlinenumbers führt zu Fehlern.
+			{}%
+		}
+		{}%
+	}
+
+%% Hier wird eine neue Datei für den Export der Zeilen-ID-Konkordanz angelegt und der Modus für den Export begonnen.
+\def\SETstartreferenzen#1{%
+	\enablemode[FSBreferenzen]%
+	\FSBnewfile{lokaleReferenzen.xml}%
+	\FSBfwrite{<?xml version="1.0" encoding="UTF-8"?>}%
+	\FSBfwriteN%
+	\FSBfwrite{<refs>}%
+	\FSBfwriteN%
+	}
+%% Die Exportdatei und der Exportmodus werden beendet.
+\def\SETstopreferenzen#1{%
+	\FSBfwrite{</refs>}%
+	\disablemode[FSBreferenzen]%
+	}
+
+%% ##################################################################
+%% ##                        Register                              ## *** TODO ******************************
+%% ##################################################################
+
+\setupdescription[FSBregistereintrag]
+	[alternative=top,
+	inbetween=\nospace,%\vskip1mm,
+	headstyle={\it},%\setupalign[flushleft,broad,nothyphenated]},
+	headalign={flushleft},%broad},%nothyphenated},
+	headcommand=\hskip-3mm,
+	margin=3mm,
+	textcommand=,
+	after=,
+	before=,
+	]
+
+\setupdescription[FSBregistersubeintrag]
+	[alternative=top,
+	inbetween=\nospace,%\vskip1mm,
+	headstyle={\it},
+	headcommand={\hskip-3mm\inframed[width=3mm,offset=0mm,align=flushleft,frame=off]{–}},
+	margin=3mm,
+	textcommand=,
+	after=,
+	before=,
+	]
+
+\setupdescription[FSBregistersubsubeintrag]
+	[alternative=top,
+	text=,
+	inbetween=\nospace,%\vskip1mm,
+	headstyle={\it},
+	headcommand={\hskip-3mm\inframed[width=3mm,offset=0mm,align=flushleft,frame=off]{–}},
+	margin=6mm,
+	textcommand=,
+	after=,
+	before=,
+	]
+% \doifmode{test}{
+
+%%%\def\SETdots#1{#1\dotfill}
+%%%\def\SETcrlf#1{#1\crlf}
+% \def\SETregistertext#1{\indenting[first]#1\crlf}
+% \setupregister[FSBortsregister]
+	% [n=2,
+	% indicator=no,
+	% textcommand=\SETregistertext,
+	% distance=0mm]
+
+
+% gute Befehle
+% \hairline
+% \blank
+%\setupbackend[export=yes]
+%\setupbackend[export=yes,xhtml=yes,css={context-export.css},]
+	%\setupbackend[format=PDF/X-1a:2003,intent={ISO Coated v2 (ECI)}] % für PDF-A ??
+% }
+
+
+\stopenvironment

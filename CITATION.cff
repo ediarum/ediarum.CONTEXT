@@ -1,0 +1,15 @@
+abstract: "ediarum.CONTEXT supports the PDF creation for digital scholarly editions. It combines a set of ConTeXt files that can be used to publish TEI-XML files as PDF."
+authors:
+  - given-names: Martin
+    family-names: Fechner
+    orcid: 'https://orcid.org/0000-0001-9233-0653'
+  - given-names: Daniel
+    family-names: Althof
+cff-version: 1.2.0
+date-released: "2022-08-09"
+license: "GPL-3.0"
+message: "If you use this software, please cite it using these metadata."
+repository-code: "https://github.com/ediarum/ediarum.CONTEXT"
+title: ediarum.CONTEXT
+type: software
+version: 1.0.0

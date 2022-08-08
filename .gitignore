@@ -1,0 +1,5 @@
+.ftpconfig
+**/*.log
+**/*.pdf
+!**/*.referenz.pdf
+**/*.tuc

@@ -1,0 +1,26 @@
+\startproduct prd_document % Hier wird die Erzeugung einer Briefsammlung getestet.
+\project project_ediarum_context
+
+%\adaptlayout[24][lines=XX] um einzelne Seiten neu zu configurieren
+% \component c_Titel
+% \component c_Einleitung
+
+\doifmode{referenzen}{%
+	\component c_Referenzen
+	}%
+\FSBstartreferenzen{}
+
+\component c_processfiles
+
+%\doifmode{referenzen}{%
+\FSBstopreferenzen{}
+%	}%
+
+% \doifmode{register}{
+	% \component c_Register
+	% }
+
+% \component c_Anhang
+% Die Register
+	% \completeFSBortsregister
+\stopproduct

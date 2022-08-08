@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<TEI xmlns="http://www.tei-c.org/ns/1.0" xmlns:telota="http://www.telota.de" telota:doctype="notebook goedel" xml:id="goedel_fmb_blp_3v">
+    <teiHeader>
+        <fileDesc>
+            <titleStmt>
+                <title>test lorem ipsum</title>
+            </titleStmt>
+            <editionStmt>
+                <edition>
+                    <title>Gödels Notizbücher</title>
+                </edition>
+            </editionStmt>
+            <publicationStmt>
+                <publisher>
+                    <ref target="http://www.bbaw.de">Berlin-Brandenburgische Akademie der
+                        Wissenschaften (BBAW)</ref>
+                </publisher>
+                <pubPlace ref="http://www.geonames.org/2950159">Berlin</pubPlace>
+            </publicationStmt>
+            <sourceDesc>
+                <msDesc rend="manuscript">
+                    <msIdentifier>
+                        <institution>Princeton University, Firestone Library</institution>
+                        <collection/>
+                        <collection>Rare Books and Special Collections</collection>
+                        <idno>Kurt Gödel Papers (CO282), Behältnis 6b, Reihe III, Mappe 63,
+                            ursprüngliche Dokumentennummer 030086<idno type="uri"
+                                >Kalliiope-URI-1234556</idno></idno>
+                    </msIdentifier>
+                    <physDesc>
+                        <p>Papier, Schreibheft, Heftgröße ca. 20,5 (Länge) x 16,5 cm (Breite) ,
+                            Heftumschlagfarbe fliederfarben mit beigen Anteilen, der Heftumschlag
+                            ist an der Faltkante auseinandergebrochen, so dass Vorder- und Rückseite
+                            lose sind; Heftinnenseiten Karo in hellgrau/bläulich; Papier vergilbt.
+                            Schrift ist sehr zart und klein. Die letzten beiden Seiten des Heftes
+                            sind nicht beschrieben.</p>
+                    </physDesc>
+                </msDesc>
+                <listWit>
+                    <witness>
+                        <bibl type="print">Drucknachweis im Notizbuch</bibl>
+                    </witness>
+                </listWit>
+            </sourceDesc>
+        </fileDesc>
+        <profileDesc>
+            <abstract>
+                <p>Hier geht es um eine Menge!!</p>
+            </abstract>
+            <creation>
+                <placeName key="prov_nm4_1r2_t5">Wien</placeName>
+                <placeName key="ed_r2z_d1w_ww">Princeton (New Jersey)</placeName>
+                <date from="Oktober 1934" to="16. Juni 1941" cert="high"/>
+            </creation>
+        </profileDesc>
+    </teiHeader>
+    <facsimile>
+        <graphic url="Digitaliat_1"/>
+    </facsimile>
+<text>
+    <body>
+            <div><p><hi rendition="#uu">Text-Formatierungen</hi></p>
+            <p><hi rendition="#u">gesperrter Test</hi></p>
+        <p>Lorem <hi rend="spacing">ipsum dolor</hi> sit amet, </p>
+            <p><hi rendition="#u">großes Spatium</hi></p>
+            <p>consetetur <space unit="em" quantity="1"/> sadipscing elitr, </p>
+            <p><hi rendition="#u">Hochstellen</hi></p>
+            <p>sed diam<hi rendition="#sup"> nonumy </hi>eirmod tempor </p>
+            <p><hi rendition="#u">Unterstreichung - einfach, zweifach, dreifach</hi></p>
+            <p>invidunt <hi rendition="#u">ut labore </hi>et <hi rendition="#uu">dolore</hi> magna
+                    <hi rendition="#uuu">aliquyam</hi> erat, </p>
+            <p><hi rendition="#uu">Auszeichnungen des Textes</hi></p>
+            <p><hi rendition="#u">Foliowechsel</hi></p>
+            <p><pb n="2"/></p>
+            <p><hi rendition="#u">Unsichere Lesart</hi></p>
+            <p>sed <unclear reason="illegible" cert="high">diam</unclear>
+                <unclear reason="covered" cert="high">voluptua</unclear>. </p>
+            <p><hi rendition="#u">Streichung</hi></p>
+            <p>At vero <del rendition="#ow">eos et accusam</del> et <del rendition="#ow">justo
+                    duo</del> dolores <del rendition="#erased">et</del> ea rebum. </p>
+            <p><hi rendition="#u">Beschädigte Stelle</hi></p>
+            <p>Stet clita <damage>kasd </damage>gubergren, </p>
+            <p><hi rendition="#u">Schäden</hi></p>
+            <p>no sea <gap unit="words" quantity="1" reason="illegible"/>takimata <gap unit="chars"
+                    quantity="1" reason="empty"/>sanctus est Lorem<gap unit="words" quantity="2"
+                    reason="fm"/> ipsum dolor sit amet. </p>
+            <p><hi rendition="#u">Durchgestrichen</hi></p>
+            <p>Lorem ipsum<del rendition="#s"><gap quantity="1" unit="words"/></del> dolor sit amet,
+                consetetur </p>
+            <p><hi rendition="#u">Korrektur durch Autor</hi></p>
+            <p><subst>
+                    <del rendition="#ow">sadipscing elitr</del>
+                    <add place="superlinear">da steht was drüber</add>
+                </subst>, sed <subst>
+                    <del rendition="#s">diam nonumy</del>
+                    <add place="left">Am linken Rand</add>
+                </subst> eirmod <subst>
+                    <del rendition="#erased">tempor</del>
+                    <add place="across">Über dem ursprünglichen Text</add>
+                </subst> invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. </p>
+            <p><hi rendition="#u">Fremdsprache</hi></p>
+            <p><foreign xml:lang="Lat">At vero eos et accusam et justo duo dolores et ea
+                    rebum</foreign>. Stet clita kasd gubergren, no sea takimata sanctus est Lorem
+                ipsum dolor sit amet. </p>
+            <p><hi rendition="#u">Horizontale Trennlinie</hi></p>
+            <milestone unit="section" rendition="#hr"/>
+            <p><hi rendition="#u">Zeilenumbruch</hi></p>
+            <p>Lorem ipsum  <lb/>dolor sit amet, </p>
+            <p><hi rendition="#u">Zeilenumbruch im Wort</hi></p>
+            <p>consetetur sadips<lb break="no"/>cing elitr, sed diam nonumy </p>
+            <p><hi rendition="#u">Zeilenumbruch im Wort mit Trennungszeichen</hi></p>
+            <p>eirmod tempor in<g ref="#typoHyphen"/><lb break="no"/>vidunt ut labore et dolore
+                magna aliquyam erat, sed diam voluptua. </p>
+            <p><hi rendition="#u">Kürzungsstrich</hi></p>
+            <p>At vero &#x0305;eos et accusam et justo duo dolores et ea rebum. </p>
+                <p><hi rendition="#u">Anmerkung vom Autor</hi></p>
+                <p>Ut wisi enim ad minim veniam<note place="right" hand="#author">Das ist eine
+                        Anmerkung vom Autor rechts</note>, quis nostrud<note place="left"
+                        hand="#author">Anmerkung links</note> exerci tation<note place="mTop"
+                        hand="#author">Anmerkung oben</note> ullamcorper suscipit<note
+                        place="mBottom" hand="#author">Anmerkung unten</note> lobortis nisl<note
+                        place="inline" hand="#author">Anmerkung innerhalb der Zeile</note> ut
+                    aliquip ex ea commodo consequat.</p>
+            <p><hi rendition="#uu">Eingriffe Herausgeber</hi></p>
+            <p><hi rendition="#u">Sachanmerkung</hi></p>
+            <p>Stet clita kasd gubergren, <seg type="comment">
+                    <orig>no sea takimata </orig>
+                    <note xml:id="nazv_ldj_5y">Sachanmerkung</note>
+                </seg>sanctus est Lorem ipsum dolor sit amet.</p>
+            
+
+        <p><hi rendition="#u">Streichung durch Bearbeiter</hi></p>
+            <p>Duis autem <choice>
+                    <sic>vel eum iriure dolor in hendrerit in vulputate velit esse </sic>
+                    <corr type="deleted"/>
+                </choice>molestie </p>
+            <p><hi rendition="#u">Korrektur durch Herausgeber</hi></p>
+            <p>consequat, <choice>
+                    <sic>vel illum dolore </sic>
+                    <corr cert="high">so ist es richtig</corr>
+                </choice>eu feugiat nulla facilisis </p>
+            <p><hi rendition="#u">Ergänzung</hi></p>
+            <p>at vero eros <ex>et accumsan </ex>et iusto odio dignissim </p>
+            <p><hi rendition="#u">Fehlendes Wort</hi></p>
+            <p>qui blandit <supplied cert="high">praesent</supplied> luptatum zzril delenit augue
+                duis dolore te feugait nulla facilisi. </p>
+            <p><hi rendition="#u">Abkürzung auflösen</hi></p>
+            <p>Lorem ipsum dolor <choice>
+                        <abbr>sit </abbr>
+                        <expan>Abkürzung aufgelöst</expan>
+                    </choice>amet, </p>
+                <p><hi rendition="#uu">Register</hi></p>
+                <p>consectetuer adipiscing elit, sed diam nonummy nibh euismod tincidunt ut laoreet
+                    dolore magna aliquam erat volutpat.</p>   
+
+        <p>Ut wisi enim ad minim veniam, quis nostrud exerci tation ullamcorper suscipit lobortis nisl ut aliquip ex ea commodo consequat. Duis autem vel eum iriure dolor in hendrerit in vulputate velit esse molestie consequat, vel illum dolore eu feugiat nulla facilisis at vero eros et accumsan et iusto odio dignissim qui blandit praesent luptatum zzril delenit augue duis dolore te feugait nulla facilisi.</p>   
+
+        <p>Nam liber tempor cum soluta nobis eleifend option congue nihil imperdiet doming id quod mazim placerat facer possim assum. Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam nonummy nibh euismod tincidunt ut laoreet dolore magna aliquam erat volutpat. Ut wisi enim ad minim veniam, quis nostrud exerci tation ullamcorper suscipit lobortis nisl ut aliquip ex ea commodo consequat.</p>   
+
+        <p>Duis autem vel eum iriure dolor in hendrerit in vulputate velit esse molestie consequat, vel illum dolore eu feugiat nulla facilisis.</p>   
+
+        <p>At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, At accusam aliquyam diam diam dolore dolores duo eirmod eos erat, et nonumy sed tempor et et invidunt justo labore Stet clita ea et gubergren, kasd magna no rebum. sanctus sea sed takimata ut vero voluptua. est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat.</p>   
+
+        <p>Consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus.</p>   
+
+        <p>Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.</p>   
+
+        <p>Duis autem vel eum iriure dolor in hendrerit in vulputate velit esse molestie consequat, vel illum dolore eu feugiat nulla facilisis at vero eros et accumsan et iusto odio dignissim qui blandit praesent luptatum zzril delenit augue duis dolore te feugait nulla facilisi. Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam nonummy nibh euismod tincidunt ut laoreet dolore magna aliquam erat volutpat.</p>   
+
+        <p>Ut wisi enim ad minim veniam, quis nostrud exerci tation ullamcorper suscipit lobortis nisl ut aliquip ex ea commodo consequat. Duis autem vel eum iriure dolor in hendrerit in vulputate velit esse molestie consequat, vel illum dolore eu feugiat nulla facilisis at vero eros et accumsan et iusto odio dignissim qui blandit praesent luptatum zzril delenit augue duis dolore te feugait nulla facilisi.</p>   
+
+        <p>Nam liber tempor cum soluta nobis eleifend option congue nihil imperdiet doming id quod mazim placerat facer possim assum. Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam nonummy nibh euismod tincidunt ut laoreet dolore magna aliquam erat volutpat. Ut wisi enim ad minim veniam, quis nostrud exerci tation ullamcorper suscipit lobortis nisl ut aliquip ex ea commodo</p></div>
+    </body>
+</text>
+</TEI>

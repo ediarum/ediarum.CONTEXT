@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refs>
+	<file xml:id="example_id_1234" type="Brief" idno="example_id_1234">
+		<note xml:id="example_id_5678" line="43"/>
+	</file>
+</refs>

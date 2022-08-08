@@ -1,0 +1,956 @@
+\startenvironment env_TEI2tex % Die TEI nach TeX Konvertierung
+\project project_ediarum_context
+
+%% ##################################################################
+%% ##                      Basiselemente                           ##
+%% ##################################################################
+
+%% Generelle Registrierung des xml-Markups
+\setupxml[default=none]
+\startxmlsetups xml:tei:setups
+	%% Alle nicht explizit definierten Elemente bleiben unberücksichtigt.
+	\xmlsetsetup{tei}{*}{-}
+	%% Der Startpunkt wird registriert.
+	\xmlsetsetup{tei}{TEI}{xml:tei:*}
+	%% Die Textstrukturelemente folgen.
+	\xmlsetsetup{tei}{text|body|div|postscript}{xml:tei:*}
+	%% Die Absatzelemente sind:
+	\xmlsetsetup{tei}{opener|closer|p|list|lg}{xml:tei:*}
+	%% Die Elemente aus opener und closer sind diese:
+	\xmlsetsetup{tei}{address|dateline|salute|signed}{xml:tei:*}%TODO Sachkommentare
+	%% Nun folgen die einfachen Textelemente.
+	\xmlsetsetup{tei}{bibl|damage|date|ex|foreign|gap|hi|lb|persName|placeName|pb|unclear}{xml:tei:*}%TODO Sachkommentare
+	%% Neue Textelemente für ediarum.basis
+	\xmlsetsetup{tei}{space|milestone|g}{xml:tei:*}
+	%% Workaround für das #-Zeichen - auf diese Weise wird es erkannt
+	%% ...Für hi
+	\xmlsetsetup{tei}{hi[@rendition='\#u']}{xml:tei:hi:u}
+	\xmlsetsetup{tei}{hi[@rendition='\#uu']}{xml:tei:hi:uu}
+	\xmlsetsetup{tei}{hi[@rendition='\#uuu']}{xml:tei:hi:uuu}
+	\xmlsetsetup{tei}{hi[@rendition='\#sup']}{xml:tei:hi:sup}
+	\xmlsetsetup{tei}{hi[@rendition='\#sub']}{xml:tei:hi:sub}
+	%% ...Horizontale Linie
+	\xmlsetsetup{tei}{milestone[@rendition='\#hr']}{xml:tei:milestone:hr} % NOT WORKING YET	
+	%% ...Sonderzeichen
+	\xmlsetsetup{tei}{g[@ref='\#typoHyphen']}{xml:tei:g:typoHyphen}
+	%% Nun folgen die Tabellenelemente.
+	\xmlsetsetup{tei}{table|row|cell|tr}{xml:tei:*}
+	%% Als nächstes kommen alle Elemente mit Apparateintrag.
+	\xmlsetsetup{tei}{add|choice|del|note|seg|subst|supplied|surplus}{xml:tei:*}%TODO Sachkommentare
+	%% Workaround für das #-Zeichen - auf diese Weise wird es erkannt
+	%% ...Für delete
+	\xmlsetsetup{tei}{del[@rendition='\#s']}{xml:tei:del:s}
+	\xmlsetsetup{tei}{del[@rendition='\#ow']}{xml:tei:del:ow}
+	\xmlsetsetup{tei}{del[@rendition='\#erased']}{xml:tei:del:erased}
+
+	%% Dieses sind die Elemente für Register und Verweise
+	\xmlsetsetup{tei}{anchor|index|ref|rs|persname}{xml:tei:*}%TODO Sachkommentare hinzu Althof: rs - persname
+
+\stopxmlsetups
+
+%% Das Register wird unter 'tei' registriert.
+\xmlregisterdocumentsetup{tei}{xml:tei:setups}
+
+
+
+%% ##################################################################
+%% ##                     Listen						           ##
+%% ##################################################################
+
+%% Listen definieren % funktioniert noch nicht...
+\setupitemize
+	[1]
+	[margin=no,
+    distance=1em,
+    stopper=,
+    left=- ,
+    right=:]
+
+
+%% ##################################################################
+%% ##               Der Einstieg in das Dokument                   ##
+%% ##################################################################
+
+%% Der Brief wird generell vorbereitet und die Metadaten werden ausgelesen.
+\startxmlsetups xml:tei:TEI
+	%% Falls die Verarbeitung von externen Referenzen stattfinden soll, werden die Briefdaten extern gespeichert, ..
+	\doifmode{FSBreferenzen}
+		{\FSBfwriteT%
+		%% .. und zwar mit Briefnummer ..
+		\xmldoifelsetext{#1}{./teiHeader/fileDesc/titleStmt/title/idno}
+			{\FSBfwrite{<file xml:id="\xmlatt{#1}{xml:id}" type="Brief"}%
+			\FSBfwrite{ idno="\xmltext{#1}{./teiHeader/fileDesc/titleStmt/title/idno}">}%
+			}
+			%% .. oder ohne.
+			{\FSBfwrite{<file xml:id="\xmlatt{#1}{xml:id}" type="Brief"}%
+			\FSBfwrite{ idno="\xmlatt{#1}{xml:id}">}%
+			}%
+		\FSBfwriteN%
+		}
+	%% Falls ein Deckblatt für einen einzelnen Brief erzeugt werden soll, werden dort die Metadaten hingeschrieben.
+	\doifmode{deckblatt}
+		{\xmlcommand{#1}{.}{xml:tei:deckblatt}}%
+	%% Hier beginnt die Verarbeitung für den Druck, ..
+	%% .. dabei wird entschieden, ob das Regest erscheint oder der Editionstext.
+	\xmldoifelse{#1}{div[@type='nurRegest']}
+		{% Falls nur das Regest erscheinen soll, ..
+		%% .. werden nur die Briefnummer und der Titel ..
+		\bgroup
+		\switchtobodyfont[12pt]
+		\it
+		%% .. als Markierung für die Kopfzeile ..
+		\xmldoifelse{#1}{./teiHeader/fileDesc/titleStmt/title/idno}
+			{\marking[FSBbriefnummer]{\xmltext{#1}{./teiHeader/fileDesc/titleStmt/title/idno}}
+			}
+			{\marking[FSBbriefnummer]{\xmlatt{#1}{xml:id}}
+			}
+		\marking[FSBbriefdatum]{\xmltext{#1}{./teiHeader/profileDesc/creation/date[@type='erstellung']}}
+		%% .. und als Überschrift verwendet.
+		\xmldoifelse{#1}{./teiHeader/fileDesc/titleStmt/title/idno}
+			{*\xmltext{#1}{./teiHeader/fileDesc/titleStmt/title/idno}.\hskip2mm
+			}
+			{*\xmlatt{#1}{xml:id}.\hskip2mm
+			}
+		\xmltext{#1}{./teiHeader/fileDesc/titleStmt/title}
+		\egroup
+		%% Dann erscheint das Regest im Text ..
+		\blank[big]
+		\bgroup\it\xmltext{#1}{./teiHeader/fileDesc/sourceDesc/msDesc/msContents/summary}\egroup
+		%% .. und schließlich noch die zugehörige Bemerkung in der Fußnote.
+		\FSBdotextapparat{%
+			\bgroup\bi *\xmltext{#1}{./teiHeader/fileDesc/titleStmt/title/idno}.\egroup
+			\hskip5mm
+			\bgroup\it\xmltext{#1}{./teiHeader/fileDesc/sourceDesc/msDesc/msContents/p/note}\egroup
+			}
+		\blank[2*big]
+		}
+		{% Im Normalfall wird der Brief mit Überlieferung und Editionstext gedruckt.
+		%% Auch dann werden die Briefnummer und der Titel ..
+		\bgroup
+		\switchtobodyfont[12pt]
+		\it
+		%% .. als Markierung für die Kopfzeile .. (geändert Althof: /idno gelöscht)
+		\xmldoifelse{#1}{./teiHeader/fileDesc/titleStmt/title}
+			{
+				%\marking[FSBbriefnummer]{\xmltext{#1}{./teiHeader/fileDesc/titleStmt/title}}
+				%% ...in FSBnotebooktitle hinterlegt (für Gödel-Notizbücher)
+				\marking[FSBnotebooktitle]{\xmltext{#1}{./teiHeader/fileDesc/titleStmt/title}}
+			}
+			{
+				%\marking[FSBbriefnummer]{\xmlatt{#1}{xml:id}}
+				\marking[FSBnotebooktitle]{\xmlatt{#1}{xml:id}}
+			}
+		\marking[FSBbriefdatum]{\xmltext{#1}{./teiHeader/profileDesc/creation/date[@type='erstellung']}}
+		%% .. und als Überschrift verwendet. (geändert Althof: keine Überschrift)
+		%\xmldoifelse{#1}{./teiHeader/fileDesc/titleStmt/title}
+		%	{
+		%	\tfb % größere Schrift
+		%	\xmltext{#1}{./teiHeader/fileDesc/titleStmt/title}.\hskip2mm
+		%	}
+		%	{\xmlatt{#1}{xml:id}.\hskip2mm
+		%	}
+		%\xmltext{#1}{./teiHeader/fileDesc/titleStmt/title}
+		\egroup
+		%% Im Textapparat erscheint dann ..
+		%\FSBdotextapparat{%
+			%% .. zu der Briefnummer ..
+		%	\bgroup\bi \xmltext{#1}{./teiHeader/fileDesc/titleStmt/title/idno}.\egroup
+			%% .. die Überlieferung, ..
+		%	\hskip5mm
+		%	\bgroup
+		%		\it Überlieferung:
+		%		\xmlcommand{#1}{./teiHeader/fileDesc/sourceDesc}{xml:tei:ueberlieferung}
+		%	\egroup
+			%% .. und eventuell die Adressierung.
+		%	\xmldoif{#1}{./text/body/opener/address/addrLine}
+		%		{\xmldoifelse{#1}{./text/body/opener/address/addrLine/add[@place]}
+		%			{\bgroup\it; Adresse \xmlattribute{#1}{./text/body/opener/address/addrLine/add}{place}:\egroup\ \xmltext{#1}{./text/body/opener/address/addrLine/add}}
+		%			{\bgroup\it; Adresse:\egroup\ \xmltext{#1}{./text/body/opener/address/addrLine}}
+		%		}
+		%	}
+		\blank[big]
+		%% Schließlich wird der Editionstext selbst gedruckt.
+		\xmlall{#1}{./text}
+		\blank[2*big]
+		}%
+	%% Falls die Referenzen exportiert wurden, wird das entsprechend abgeschlossen.
+	\doifmode{FSBreferenzen}{\FSBfwriteT\FSBfwrite{</file>}\FSBfwriteN}
+\stopxmlsetups
+
+%% ##################################################################
+%% ##               Elemente für das Deckblatt                     ##
+%% ##################################################################
+
+%% Die Metadaten werden in das Deckblatt geschrieben.
+\startxmlsetups xml:tei:deckblatt
+	%% Es wird eine Seite außerhalb der Seitenzählung und des normalen Setups wird erzeugt.
+	\startstandardmakeup
+	%% Zunächst kommt der Titel ..
+	\bgroup\bfa \xmltext{#1}{./teiHeader/fileDesc/titleStmt/title}\egroup
+	%% .. und dann die weiteren Informationen.
+	\blank[small]
+	\bgroup
+	%\xmltext{#1}{./teiHeader/fileDesc/editionStmt/edition/title[@type='editionstitel']}\crlf
+	%\xmltext{#1}{./teiHeader/fileDesc/editionStmt/edition/title[@type='abteilungstitel']}\crlf
+	\xmltext{#1}{./teiHeader/fileDesc/editionStmt/edition/title}\crlf
+	\egroup
+	%Briefnr. \xmltext{#1}{./teiHeader/fileDesc/titleStmt/title/idno}
+	\blank[3*big]
+	\xmlcommand{#1}{./teiHeader/fileDesc/editionStmt/respStmt}{xml:tei:deckblatt:respStmt}
+	\crlf
+	\bgroup\it herausgegeben im Auftrag von\egroup
+	\crlf
+	\xmltext{#1}{./teiHeader/fileDesc/publicationStmt/publisher/ref} %% geändert Althof (hinzu: /ref)
+	%% Zum Schluß folgt noch die Überlieferung ..
+	\blank
+	%% .. für alle Manuskripte ..
+	\xmlcommand{#1}{./teiHeader/fileDesc/sourceDesc/msDesc}{xml:tei:deckblatt:msDesc}
+	%% .. und für alle Textzeugen ..
+	\xmlcommand{#1}{./teiHeader/fileDesc/sourceDesc/listWit/witness}{xml:tei:deckblatt:witness}
+	%% .. und das Regest.
+	\blank[3*big]
+	\bgroup\it Zusammenfassung\egroup\crlf
+	\xmltext{#1}{./teiHeader/fileDesc/sourceDesc/msDesc/msContents/summary}
+	\blank
+	\bgroup\it Bemerkung\egroup\crlf
+	\xmltext{#1}{./teiHeader/fileDesc/sourceDesc/msDesc/msContents/summary/note}
+	\stopstandardmakeup
+\stopxmlsetups
+
+%% Die Informationen zu den Drucken werden für das Deckblatt ausgegeben.
+\startxmlsetups xml:tei:deckblatt:bibl
+	\bgroup\it\Word{\xmlatt{#1}{n}}\egroup\crlf
+	\xmltext{#1}{.}
+	\blank
+\stopxmlsetups
+
+%% Die Informationen zum Manuskript werden hier für das Deckblatt ausgegeben.
+\startxmlsetups xml:tei:deckblatt:msDesc
+	\bgroup\it \Word{\xmlatt{#1}{n}}\egroup\crlf
+	\xmltext{#1}{./msIdentifier/institution}\crlf
+	\xmltext{#1}{./msIdentifier/collection}\crlf % geändert Althof: repository in collection
+	\xmltext{#1}{./msIdentifier/idno}
+	\blank
+\stopxmlsetups
+
+%% Für das Deckblatt werden die verantwortlichen Personen mit ihrer Rolle genannt.
+\startxmlsetups xml:tei:deckblatt:respStmt
+	\xmltext{#1}{./name} (\bgroup\it\xmltext{#1}{./resp}\egroup)\crlf
+\stopxmlsetups
+
+%% Die Informationen zu den Textzeugen werden hier für das Deckblatt ausgegeben
+\startxmlsetups xml:tei:deckblatt:witness
+	\xmlcommand{#1}{./msDesc}{xml:tei:deckblatt:msDesc}
+	\xmlcommand{#1}{./bibl}{xml:tei:deckblatt:bibl}
+\stopxmlsetups
+
+%% ##################################################################
+%% ##              Element für die Überlieferung                   ##
+%% ##################################################################
+
+%% Die Überlieferung wird im Textapparat behandelt.
+%\startxmlsetups xml:tei:ueberlieferung
+	%% Zunächst wird der Nachweis zu einer evtl. Handschrift ausgegeben ..
+%	\xmldoif{#1}{msDesc[@rend='Handschrift']}
+%		{\ H: \xmltext{#1}{msDesc[@rend='Handschrift']/msIdentifier/idno}}
+	%% .. mit Trennzeichen, falls es Handschrift und Abschrift gibt, ..
+%	\doif{\xmlcount{#1}{msDesc}}{2}
+%		{;}
+	%% .. dann kommt eine evtl. Abschrift.
+%	\xmldoif{#1}{msDesc[@rend='Abschrift']}
+%		{\ h: \xmltext{#1}{msDesc[@rend='Abschrift']/msIdentifier/idno}}
+	%% Ein weiterer Trenner folgt, wenn es Manuskripte und Drucke gibt.
+%	\xmldoif{#1}{msDesc}{\xmldoif{#1}{bibl}
+%		{;}}%
+	%% Falls es nur einen Druck gibt ..
+%	\doif{\xmlcount{#1}{bibl}}{1}
+%		{% .. wird er mit D eingeleitet, ..
+%		\ D: \xmltext{#1}{bibl}
+%		}%
+	%% bei mehreren Drucken ..
+%	\doif{\xmlcount{#1}{bibl}}{2}
+%		{% werden diese nummeriert.
+%		\ D1: \xmlindex{#1}{bibl}{1};
+%		\ D2: \xmlindex{#1}{bibl}{2}
+%		}%
+	%% Falls es eine Abschrift und Drucke gibt und die Abschrift Textgrundlage ist, wird dies gedruckt.
+%	\xmldoif{#1}{./msDesc[@n='Abschrift']}{\xmldoif{#1}{bibl}
+%		{; Textgrundlage: h}}
+	%% Wenn der erste Druck Textgrundlage ist, ..
+%	\xmldoif{#1}{./bibl[@n='1']}
+%		{% .. und falls es eine Abschrift und einen Druck gibt, reicht ein D, ..
+%		\xmldoif{#1}{msDesc[@rend='Abschrift']}{\doif{\xmlcount{#1}{bibl}}{1}
+%			{; Textgrundlage: D}}
+		%% .. bei mehreren Drucken dagegen, braucht es ein D1.
+%		\doif{\xmlcount{#1}{bibl}}{2}
+%			{; Textgrundlage: D1}
+%		}%
+	%% Wenn der zweite Druck Textgrundlage ist, gibt es ein D2.
+%	\xmldoif{#1}{./bibl[@n='2']}
+%		{; Textgrundlage: D2}
+%\stopxmlsetups
+
+%% ##################################################################
+%% ##              Die Strukturelemente des Textes                 ##
+%% ##################################################################
+
+%% Der Einstieg in die Ausgabe des edierten Textes
+\startxmlsetups xml:tei:text
+	%% Zuerst wird die Zeilennummerierung auf null gesetzt, ..
+	\FSBresetlinenumbering[FSBdefaultlinenumbering]
+	%%  .. dann wird der Inhalt ausgegeben, ..
+	\xmlall{#1}{./body}
+	%% .. und zum Schluss die vorhandenen Autorenfussnoten gedruckt.
+	%\placenotes[FSBautornote] %% geändert Althof - mit Kommentar versehen
+\stopxmlsetups
+
+%% Im Textkörper tauchen nur div und postscript auf.
+\startxmlsetups xml:tei:body
+	\xmlall{#1}{./(div|postscript)} 
+\stopxmlsetups
+
+%% Jeder Textbereich kann opener, p, list, lg und closer enthalten.
+\startxmlsetups xml:tei:div
+	\xmlall{#1}{./(opener|p|list|lg|closer)}
+\stopxmlsetups
+
+%% Ein Postskriptum wird wie ein div behandelt.
+\startxmlsetups xml:tei:postscript
+	\xmlall{#1}{./(opener|p|list|lg|closer)}
+\stopxmlsetups
+
+%% ##################################################################
+%% ##                   Die Absatzelemente                         ##
+%% ##################################################################
+
+%% Im Briefkopf stehen Adresse und Datum.
+\startxmlsetups xml:tei:opener
+	%% Zuerst wird sichergestellt, daß wir in einem neuen Absatz sind, ..
+	\par
+	%% .. dann beginnt die Zeilennummerierung.
+	\startlinenumbering[FSBdefaultlinenumbering][continue]
+	%% Die Adresse und das Datum stehen rechts.
+	\startalignment[flushright]
+	\xmlall{#1}{./(address|dateline)}
+	\stopalignment
+	\stoplinenumbering
+	%% Nach einem kleinen Durchschuss ..
+	\blank[small]
+	%% .. wird linksbündig die Begrüßung eingefügt.
+	\startlinenumbering[FSBdefaultlinenumbering][continue]
+	\xmlall{#1}{./salute}
+	\stoplinenumbering
+	%% Nach dem Briefkopf steht der erste Absatz nicht eingerückt, aber die folgenden.
+	\indenting[yes,next]
+\stopxmlsetups
+
+%% Am Briefschluss steht alles linksbündig.
+\startxmlsetups xml:tei:closer
+	%% Die Zeilennummerierung wird fortgeführt, ..
+	\startlinenumbering[FSBdefaultlinenumbering][continue]
+	%% .. dann folgen Ort, Datierung, Abschied und Unterschrift.
+	\xmlall{#1}{./(address|dateline|salute|signed)}
+	\stoplinenumbering
+\stopxmlsetups
+
+% Die normalen Absätze enthalten den meisten Text.
+\startxmlsetups xml:tei:p
+	%% Zuerst beginnt der neue Paragraph
+	\par
+	%% ...mit einem Abstand zum vorangehenden
+	%\blank[small]
+	%\hskip5mm
+	\vskip5mm
+	%% Falls der Absatz zentriert erscheinen soll, ..
+	\doifelse{\xmlatt{#1}{rend}}{align(center)}
+		{% .. wird er entsprechend gesetzt ..
+		\bgroup
+		\startalignment[middle]
+		%% .. mit Zeilennummerierung, ..
+		\startlinenumbering[FSBdefaultlinenumbering][continue]
+		\xmlflush{#1}%TODO Sachkommentare
+		%\xmlall{#1}{bibl|damage|date|ex|foreign|gap|hi|lb|persName|placeName|pb|unclear|add|choice|del|note|seg|subst|supplied|surplus|anchor|index|ref}%TODO Sachkommentare
+		\stoplinenumbering
+		\stopalignment
+		\egroup
+		}
+		{% .. ansonsten bleibt er auch mit Zeilennummerierung linksbündig.
+		\startlinenumbering[FSBdefaultlinenumbering][continue]
+		\xmlstripnolines{#1}{.}
+		\xmlflush{#1}%TODO Sachkommentare
+		%\xmlall{#1}{bibl|damage|date|ex|foreign|gap|hi|lb|persName|placeName|pb|unclear|add|choice|del|note|seg|subst|supplied|surplus|anchor|index|ref}%TODO Sachkommentare
+		\stoplinenumbering
+		}%
+\stopxmlsetups
+
+%% Eine Liste mit verschiedenen Einträgen ..
+\startxmlsetups xml:tei:list
+	%% .. beginnt auch in einem neuen Absatz ..
+	\par
+	%% .. und natürlich der Zeilennummerierung.
+	\startlinenumbering[FSBdefaultlinenumbering][continue]
+	%% Falls es eine Liste mit Aufzählungspunkten sein soll, ..
+	 \doif{\xmlatt{#1}{type}}{bulleted}
+		{% .. werden diese einzelnen Elemente damit aufgerufen, ..
+			\startitemize[1]
+			\xmlcommand{#1}{./item}{xml:tei:list:item}
+			\xmlflush{#1}
+			\stopitemize%
+		}
+	%% .. oder das gleiche bei einer nummerierten Liste.
+	\doifelse{\xmlatt{#1}{type}}{ordered}
+	{
+		\startitemize[n,packed]
+		\xmlcommand{#1}{./item}{xml:tei:list:item}
+		\stopitemize%
+	}
+	% oder eine Liste ohne Attribut (hinzu Althof)
+	%\doifempty{\xmlatt{#1}{type}} % TODO eigene Bedingung für Liste ohne Attribut (so nicht funktionsfähig)
+	%\doif{\xmlatt{#1}{type}}{}{ % TODO eigene Bedingung für Liste ohne Attribut (so nicht funktionsfähig)
+	{
+		\startitemize[2]
+		\xmlcommand{#1}{./item}{xml:tei:list:item}
+		\xmlflush{#1}
+		\stopitemize%
+	}
+	\stoplinenumbering
+\stopxmlsetups
+
+%% Die einzelnen Elemente einer Liste werden entsprechend gekennzeichnet.
+\startxmlsetups xml:tei:list:item
+	\item \xmlflush{#1}
+\stopxmlsetups
+
+%% Eine Reihe von einzelnen Zeilen werden in einer Zeilengruppe behandelt.
+\startxmlsetups xml:tei:lg
+	%% Zunächst fängt ein neuer Absatz an ..
+	\par
+	%% .. mit einem mittleren Durchschuss ..
+	\blank[medium]
+	%% .. und der Zeilennummerierung, ..
+	\startlinenumbering[FSBdefaultlinenumbering][continue]
+	%% .. dann kommen die einzelnen Zeilen.
+	\xmlcommand{#1}{./l}{xml:tei:lg:l}
+	\stoplinenumbering
+	\blank
+	\noindentation
+\stopxmlsetups
+
+%% Die einzelnen Zeilen stehen jeweils in einer eigenen Zeile.
+\startxmlsetups xml:tei:lg:l
+	\par\xmlflush{#1}
+\stopxmlsetups
+
+%% ##################################################################
+%% ##        Die Elemente aus Briefkopf und Briefschluss           ##
+%% ##################################################################
+
+%% Die Adresse wird hingeschrieben, ..
+\startxmlsetups xml:tei:address
+	%% .. da evtl. Zeilenumbrüche hier anders gehandhabt werden als normal, gibt es den Modus FSBlinebreak
+	\enablemode[FSBlinebreak]
+	\xmlcommand{#1}{./addrLine}{xml:tei:address:addrLine}
+	\xmlflush{#1}
+	\disablemode[FSBlinebreak]
+\stopxmlsetups
+
+%% Nach einem kleinen Durchschuss folgt die Adresse.
+\startxmlsetups xml:tei:address:addrLine
+	\par\blank[small]\xmlflush{#1}
+\stopxmlsetups
+
+%% Nach einem kleinen Durchschuss folgt das Datum.
+\startxmlsetups xml:tei:dateline
+	\par\blank[small]\xmlflush{#1}
+\stopxmlsetups
+
+%% Nach einem Absatz folgt die Begrüßung.
+\startxmlsetups xml:tei:salute
+	\par\xmlflush{#1}
+\stopxmlsetups
+
+%% Die Unterschrift ist in einem eigenen Absatz rechtsbündig.
+\startxmlsetups xml:tei:signed
+	\par\rightaligned{\xmlflush{#1}}
+\stopxmlsetups
+
+%% ##################################################################
+%% ##                Die einfachen Textelemente                    ##
+%% ##################################################################
+
+%% Gekennzeichnete Werke werden nur ausgegeben.
+\startxmlsetups xml:tei:bibl
+	\xmlstrip{#1}{.}
+	\xmlflush{#1}
+\stopxmlsetups
+
+%% Beschädigte Stellen mit kursiven eckigen Klammern gekennzeichnet.
+\startxmlsetups xml:tei:damage
+	\bgroup\it [\space]\egroup
+\stopxmlsetups
+
+%% Datumsangaben werden nur ausgegeben.
+\startxmlsetups xml:tei:date
+	\xmlstrip{#1}{.}
+	\xmlflush{#1}
+\stopxmlsetups
+
+%% Ergänzungen des Herausgebers werden kursiv gesetzt.
+\startxmlsetups xml:tei:ex
+	\bgroup\it\ignorespaces\xmlflush{#1}\removeunwantedspaces\egroup
+\stopxmlsetups
+
+%% Wenn ein Abschnitt in einer anderen Sprache als deutsch vorliegt.
+\startxmlsetups xml:tei:foreign
+	%% Falls es sich um einen griechischen Text handelt, ..
+	\doifelse{\xmlatt{#1}{xml:lang}}{grc}
+		{% .. wird die Schrift auf eine griechische Zeichen unterstützende umgestellt.
+		{\FSBgreek{\xmlflush{#1}}}
+		}
+		{% Bei allen anderen Sprachen gibt es keine Veränderung.
+		\xmlflush{#1}}
+\stopxmlsetups
+
+%% Eine Lücke im Manuskript wird durch Winkel angedeutet.
+\startxmlsetups xml:tei:gap
+	\FSBlfloor\ \FSBrceil
+\stopxmlsetups
+
+%% Sonderanweisungen für hi....
+\startxmlsetups xml:tei:hi:u
+	%% für einfache Unterstreichung
+		\underbar{\ignorespaces \xmlflush{#1}} % mit \removeunwantedspaces werden auch Leerzeichen zwischen Worten gelöscht...
+\stopxmlsetups
+
+\startxmlsetups xml:tei:hi:uu
+	%% für doppelte Unterstreichung
+	\underbar{\underbar{\xmlflush{#1}}}%
+\stopxmlsetups
+
+\startxmlsetups xml:tei:hi:uuu
+	%% für dreifache Unterstreichung
+	\underbar{\underbar{\underbar{\xmlflush{#1}}}}%
+\stopxmlsetups
+
+\startxmlsetups xml:tei:hi:sup
+	%% hochgestellt
+	\high{\xmlflush{#1}}%
+\stopxmlsetups
+
+\startxmlsetups xml:tei:hi:sub
+	%% tiefgestellt
+	\low{\xmlflush{#1}}%
+\stopxmlsetups
+
+\startxmlsetups xml:tei:hi
+	%% sonst einfach alle anderen hi (ohne Attribut) gesperrt
+		\xmlstrip{#1}{.}
+		\FSBgesperrt{\xmlflush{#1}}%
+\stopxmlsetups
+
+%% Sonderanweisungen für Horizontale Linie
+\startxmlsetups xml:tei:milestone:hr
+	%% horizontale Linie
+	\crlf
+	line
+	\crlf
+\stopxmlsetups
+
+%% Zeilenwechsel im Manuskript werden nur an Stellen berücksichtigt, an denen dies explizit gewünscht ist (etwa bei der Anschrift).
+\startxmlsetups xml:tei:lb
+	\doifmodeelse{FSBlinebreak}
+		{\crlf}
+		{}%
+\stopxmlsetups
+
+%% Sonderanweisung für Zeilenwechsel mit Trennstrich (nur der Trennstrich wird gesetzt)
+\startxmlsetups xml:tei:g:typoHyphen
+	-
+\stopxmlsetups
+
+%% Personen werden nur ausgegeben.
+\startxmlsetups xml:tei:persName
+	\xmlstrip{#1}{.}
+	\xmlflush{#1}
+\stopxmlsetups
+
+%% Auch Orte werden nur ausgegeben.
+\startxmlsetups xml:tei:placeName
+	\xmlstrip{#1}{.}
+	\xmlflush{#1}
+\stopxmlsetups
+
+%% Auch Verweise ins Sachregister werden nur ausgegeben. % hinzu Althof
+\startxmlsetups xml:tei:rs
+	\xmlstrip{#1}{.}
+	\xmlflush{#1}
+\stopxmlsetups
+
+%% Ein Seitenwechsel im Manuskript wird im Druck durch einen senkrechten Strich dargestellt.
+\startxmlsetups xml:tei:pb
+	|(\xmlatt{#1}{n})
+\stopxmlsetups
+
+%% Unklare Stellen werden in Winkeln dargestellt.
+\startxmlsetups xml:tei:unclear
+	\FSBlfloor\xmlflush{#1}\FSBrceil
+\stopxmlsetups
+
+%% Spatium (wie bei gap mit Winkeln dargestellt)
+\startxmlsetups xml:tei:space
+	 \FSBlfloor\ \FSBrceil
+\stopxmlsetups
+
+%% Tabellen... (hinzu Althof)
+\startxmlsetups xml:tei:table
+%% ...mit 3 Spalten
+	\doif	{\xmlatt{#1}{cols}}{3}
+	{
+		\vskip2mm
+		\setupTABLE[c][1,2,3][align=right,width=.33\textwidth]
+		\bTABLE[frame=on,split=yes]
+		\xmlflush{#1}
+		\eTABLE
+		\vskip2mm
+	}
+	%% ...mit 2 Spalten
+	\doif	{\xmlatt{#1}{cols}}{2}
+	{
+		\vskip2mm
+		\setupTABLE[c][1,2][align=right,width=.5\textwidth]
+		\bTABLE[frame=on,split=yes]
+		\xmlflush{#1}
+		\eTABLE
+		\vskip2mm
+	}
+	%% ...mit 1 Spalte
+	\doif	{\xmlatt{#1}{cols}}{1} {
+		\vskip2mm
+		\setupTABLE[c][1][align=right,width=1\textwidth]
+		\bTABLE[frame=on,split=yes]
+		\xmlflush{#1}
+		\eTABLE
+		\vskip2mm
+	}
+	%% ...falls kein Attribut zur Spaltenzahl angegeben ist, ist die Tabelle nur 1 Spalte breit
+	%\doif{\expanded{\xmlatt{#1}{cols}}}{}{ %% TODO Bedingung überprüfen
+	%\xmldoifelseempty	{#1}{./attribute(cols)} { %% TODO Bedingung überprüfen
+	\doif{\xmlatt{#1}{cols}}{}{
+	 \vskip2mm
+		\setupTABLE[c][1][align=right,width=1\textwidth]
+		\bTABLE[frame=on,split=yes]
+		\xmlflush{#1}
+		\eTABLE
+		\vskip2mm
+	}
+\stopxmlsetups
+
+\startxmlsetups	xml:tei:row
+	\bTR \xmlflush{#1}\eTR
+\stopxmlsetups
+
+\startxmlsetups xml:tei:th
+	\bTD[align=middle,style=bold]
+	\xmlflush{#1}\eTD
+\stopxmlsetups
+
+\startxmlsetups xml:tei:cell
+	\bTD \xmlflush{#1}\eTD
+\stopxmlsetups
+
+
+%% ##################################################################
+%% ##             Alle Elemente mit Apparateintrag                 ##
+%% ##################################################################
+
+%% Eine einfache Einfügung im Text wird mit dem Ort in die Fußnote geschrieben.
+\startxmlsetups xml:tei:add
+	\FSBtextapparat{\xmlflush{#1}}
+		{\xmlflush{#1}}{\xmlatt{#1}{place}}{}
+\stopxmlsetups
+
+%% Eine Textanmerkung vom Herausgeber kann ..
+\startxmlsetups xml:tei:choice
+	%% .. entweder eine Korrektur ..
+	\xmldoif{#1}{./corr}
+		{% .. (mit niedriger Wahrscheinlichkeit nur als Konjektur im Apparat ..
+		\doif{\xmlattribute{#1}{./corr}{cert}}{low}
+			{\FSBtextapparat{\xmlcommand{#1}{./sic}{xml:tei:choice:sic}}
+				{\xmlcommand{#1}{./sic}{xml:tei:choice:sic}}{Kj.}{\xmlcommand{#1}{./corr}{xml:tei:choice:corr}}
+			}%
+		%% .. oder mit hoher Wahrscheinlichkeit als Emendation im Text mit Anmerkung) ..
+		\doif{\xmlattribute{#1}{./corr}{cert}}{high}
+			{\FSBtextapparat{\xmlcommand{#1}{./corr}{xml:tei:choice:corr}}
+				{\xmlcommand{#1}{./corr}{xml:tei:choice:corr}}{}{\xmlcommand{#1}{./sic}{xml:tei:choice:sic}}
+			}%
+		}%
+	%% .. die Auflösung einer Abkürzung ..
+	\xmldoif{#1}{./abbr}
+		{% .. im Textapparat ..
+		\FSBtextapparat{\xmlcommand{#1}{./abbr}{xml:tei:choice:abbr}}
+			{\xmlcommand{#1}{./abbr}{xml:tei:choice:abbr}}{Abk. wohl für}{\xmlcommand{#1}{./expan}{xml:tei:choice:expan}}
+		}%
+	%% .. oder den Hinweis auf eine weitere Lesart beinhalten, ..
+	\xmldoif{#1}{./unclear}
+		{% .. der dann auch im Textapparat vermerkt wird.
+		\FSBtextapparat{\xmlcommand{#1}{./unclear[1]}{xml:tei:choice:unclear}}
+			{\xmlcommand{#1}{./unclear[1]}{xml:tei:choice:unclear}}{oder}{\xmlcommand{#1}{./unclear[2]}{xml:tei:choice:unclear}}
+		}%
+\stopxmlsetups
+
+%% Eine Abkürzung steht im choice zusammen mit der Auflösung.
+\startxmlsetups xml:tei:choice:abbr
+	\xmlflush{#1}
+\stopxmlsetups
+
+%% Eine Korrektur steht mit dem Manuskripttext im choice
+\startxmlsetups xml:tei:choice:corr
+	\xmlflush{#1}
+\stopxmlsetups
+
+%% Die Auflösung einer Abkkürzung steht wird nur ausgegeben.
+\startxmlsetups xml:tei:choice:expan
+	\xmlflush{#1}
+\stopxmlsetups
+
+%% Der Manuskripttext zu einer Herausgeberkorrektur steht im choice.
+\startxmlsetups xml:tei:choice:sic
+	\xmlflush{#1}
+\stopxmlsetups
+
+%% Ein unklarer Ausdruck im choice wird auch in Winkel gesetzt.
+\startxmlsetups xml:tei:choice:unclear
+	\FSBlfloor\xmlflush{#1}\FSBrceil
+\stopxmlsetups
+
+%% Einfache Löschung für Ediarum (hinzu Althof)
+\startxmlsetups xml:tei:del
+	\FSBtextapparat{||} % Löschungszeichen für den Text
+	{\type{||}}{\xmlflush{#1}}{gelöscht} % {Löschungszeichen als Lemma}{gelöschter Text}{Anmerkung}
+\stopxmlsetups
+
+%% Einfache Löschung für Ediarum (hinzu Althof)
+\startxmlsetups xml:tei:del:s
+	\FSBtextapparat{||} % Löschungszeichen für den Text
+	{\type{||}}{\xmlflush{#1}}{durchgestrichen vom Autor} % {Löschungszeichen als Lemma}{gelöschter Text}{Anmerkung}
+\stopxmlsetups
+
+%% Einfache Löschung für Ediarum (hinzu Althof)
+\startxmlsetups xml:tei:del:ow
+	\FSBtextapparat{||} % Löschungszeichen für den Text
+	{\type{||}}{\xmlflush{#1}}{überschrieben vom Autor} % {Löschungszeichen als Lemma}{gelöschter Text}{Anmerkung}
+\stopxmlsetups
+
+%% Einfache Löschung für Ediarum (hinzu Althof)
+\startxmlsetups xml:tei:del:erased
+	\FSBtextapparat{||} % Löschungszeichen für den Text
+	{\type{||}}{\xmlflush{#1}}{radiert} % {Löschungszeichen als Lemma}{gelöschter Text}{Anmerkung}
+\stopxmlsetups
+
+%% Eine einfache Löschung ..
+%\startxmlsetups xml:tei:del
+	%% .. wird mit dem vorangehenden Wort ..
+%	\xmldoif{#1}{.[@prev]}
+%		{\FSBtextapparat{}
+%			{\FSBwikitotex{\xmlatt{#1}{prev}}}{folgt}{\FSBlang\ignorespaces\xmlflush{#1}\removeunwantedspaces\FSBrang}
+%		}%
+	%% .. oder mit dem folgenden als Lemma im Textapparat in spitze Klammern gesetzt.
+%	\xmldoif{#1}{.[@next]}
+%		{\FSBtextapparat{}
+%			{\FSBwikitotex{\xmlatt{#1}{next}}}{davor}{\FSBlang\ignorespaces\xmlflush{#1}\removeunwantedspaces\FSBrang}
+%		}%
+%\stopxmlsetups
+
+%% Eine Autorenfußnote wird als Fußnote im Text gedruckt. (hinzu Althof)
+\startxmlsetups xml:tei:note
+	%\FSBautornote{{\it\xmlatt{#1}{place}:} \xmlflush{#1}} %% urpsprüngliche Version - geändert Althof 
+	\doif{\xmlatt{#1}{place}}{mBottom}
+		{
+			%\FSBautornote{{\it\xmlatt{#1}{place}:} \xmlflush{#1}} %% urpsprüngliche Version - geändert Althof 
+			\FSBfootnote{Anmerkung unten: \xmlflush{#1}}
+		}
+	\doif{\xmlatt{#1}{place}}{right}
+		{
+			\FSBfootnote{Anmerkung rechts: \xmlflush{#1}}
+		}
+		\doif{\xmlatt{#1}{place}}{left}
+		{
+			\FSBfootnote{Anmerkung links: \xmlflush{#1}}
+		}
+	\doif{\xmlatt{#1}{place}}{mTop}
+		{
+			\FSBfootnote{Anmerkung oben: \xmlflush{#1}}
+		}
+	\doif{\xmlatt{#1}{place}}{inline}
+		{
+			\FSBfootnote{Anmerkung in der Zeile: \xmlflush{#1}}
+		}				
+\stopxmlsetups
+
+%% Innerhalb eines Segmentes kann sich ..
+\startxmlsetups xml:tei:seg
+	%% .. eine Sachanmerkung ..
+	\doif{\xmlatt{#1}{type}}{comment} %% geändert Althof - orig: \doif{\xmlatt{#1}{type}}{sachapparat}
+		 {\FSBsachapparat{%
+			%% .. (dabei wird im Text, wenn Referenzen exportiert werden, ..
+			\doifmodeelse{FSBreferenzen}
+				{% .. der Bezug gedruckt und die Referenz entsprechend exportiert, ..
+				\FSBexportelementline{note}{\FSBattribute{xml:id}{\xmlattribute{#1}{./note}{xml:id}}}{\xmlcommand{#1}{./orig}{xml:tei:seg:orig}}%
+				}%
+				{% .. sonst wird nur der Text gesetzt) ..
+				\xmlcommand{#1}{./orig}{xml:tei:seg:orig}%
+				}%
+			}
+			{\xmlcommand{#1}{./note}{xml:tei:seg:note}}
+		}%
+	%% .. oder eine Textanmerkung befinden.
+	\doif{\xmlatt{#1}{type}}{critical} %% geändert Althof - orig: \doif{\xmlatt{#1}{type}}{textapparat}
+		{
+		%% Version im Sachapparat
+			%\FSBsachapparat{\xmlcommand{#1}{./orig}{xml:tei:seg:orig}}
+			%{\xmlcommand{#1}{./orig}{xml:tei:seg:orig}}{\xmlcommand{#1}{./note}{xml:tei:seg:note}}{} %% geändert Althof, weil Ausgabe von note in Text
+			%{\xmlcommand{#1}{./note}{xml:tei:seg:note}}
+
+			%% Version im Textapparat
+			\FSBtextapparat{\xmlcommand{#1}{./orig}{xml:tei:seg:orig}}
+				{\xmlcommand{#1}{./orig}{xml:tei:seg:orig}}{\xmlcommand{#1}{./note}{xml:tei:seg:note}}{}
+		}%
+\stopxmlsetups
+
+%% Der Text, auf den sich ein Apparateintrag bezieht wird gedruckt.
+\startxmlsetups xml:tei:seg:orig
+	\xmlstrip{#1}{.}
+	\xmlflush{#1}
+\stopxmlsetups
+
+%% Die Bemerkung eines Apparateintrages wird gedruckt.
+\startxmlsetups xml:tei:seg:note
+	\xmlflush{#1}%
+\stopxmlsetups
+
+%% Bei einer Ersetzung wird es komplizierter.
+\startxmlsetups xml:tei:subst
+	\enablemode[subst]
+	%% Falls bei der Einfügung ein Ort angegeben ist, ..
+	\xmldoifelse{#1}{./add[@place]}
+		{% .. wird dieser im Textapparat erwähnt, ..
+		\FSBtextapparat{\xmlcommand{#1}{./add}{xml:tei:subst:add}}
+			{\xmlcommand{#1}{./add}{xml:tei:subst:add}}{\xmlattribute{#1}{./add}{place}}{\xmlcommand{#1}{./del}{xml:tei:subst:del}}
+		}
+		{% .. sonst heißt es nur 'korr. aus'.
+		\FSBtextapparat{\xmlcommand{#1}{./add}{xml:tei:subst:add}}
+			{\xmlcommand{#1}{./add}{xml:tei:subst:add}}{korr. aus}{\xmlcommand{#1}{./del}{xml:tei:subst:del}}
+		}%
+	\disablemode[subst]
+\stopxmlsetups
+
+%% Das Hinzugefügte einer Ersetzung wird ohne führende und folgende Leerzeichen gedruckt.
+\startxmlsetups xml:tei:subst:add
+	\ignorespaces\xmlflush{#1}\removeunwantedspaces%
+\stopxmlsetups
+
+%% Das Gestrichene einer Ersetzung wird, wenn es nicht überschrieben wurde, in spitzen Klammern gedruckt.
+\startxmlsetups xml:tei:subst:del
+	\doifelse{\xmlatt{#1}{rend}}{überschrieben}
+		{\xmlflush{#1}}
+		{\FSBlang\xmlflush{#1}\FSBrang}
+\stopxmlsetups
+
+%% Fehlende Worte werden ..
+\startxmlsetups xml:tei:supplied
+	%% .. bei Unsicherheit im Textapparat vermerkt, ..
+	\doif{\xmlattribute{#1}{.}{cert}}{low}
+		{\FSBtextapparat{}
+			{\FSBwikitotex{\xmlatt{#1}{prev}}}{zu ergänzen wohl}{\xmlflush{#1}}
+		}%
+	%% .. ansonsten in eckigen Klammern dem Text hinzugefügt.
+	\doif{\xmlattribute{#1}{.}{cert}}{high}
+		{[\bgroup\it \xmlflush{#1}\egroup]}%
+\stopxmlsetups
+
+%% Überflüssige Wörter werden ..
+\startxmlsetups xml:tei:surplus
+	%% .. mit vorangehendem oder ..
+	\xmldoif{#1}{.[@prev]}
+		{\FSBtextapparat{}
+			{\FSBwikitotex{\xmlatt{#1}{prev}}}{folgt}{\FSBlang\FSBlang\ignorespaces\xmlflush{#1}\removeunwantedspaces\FSBrang\FSBrang}%
+		}%
+	%% .. folgendem Wort als Lemma in den Textapparat geschrieben.
+	\xmldoif{#1}{.[@next]}
+		{\FSBtextapparat{}
+			{\FSBwikitotex{\xmlatt{#1}{next}}}{davor}{\FSBlang\FSBlang\ignorespaces\xmlflush{#1}\removeunwantedspaces\FSBrang\FSBrang}%
+		}%
+\stopxmlsetups
+
+%% ##################################################################
+%% ##                      Register und Verweise                   ##
+%% ##################################################################
+
+%% Bei den Ankern werden, wenn gewünscht, die Zeilennummern exportiert.
+\startxmlsetups xml:tei:anchor
+	\xmldoif{#1}{.[@type='indexbereich']}
+		{\removeunwantedspaces}%
+	\doifmode{FSBreferenzen}
+		{%
+		%% Falls der Anker im Sachapparat auftaucht, ..
+		\doifmodeelse{FSBinSachapparat}
+			%% .. wird er entsprechend exportiert.
+			{\FSBexportelementlineapparatus{anchor}{\FSBattribute{xml:id}{\xmlatt{#1}{xml:id}}}{}%
+			}
+			%% Ansonsten wird die normale Routine aufgerufen..
+			%% .. wenn er sich nicht im Lemma befindet.
+			{\doifmodeelse{inLemma}{}%
+				{\FSBexportelementline{anchor}{\FSBattribute{xml:id}{\xmlatt{#1}{xml:id}}}{}}%
+			}
+		}%
+\stopxmlsetups
+
+%% Bei Referenzierungen wird, wenn gewünscht und vorhanden, das zugehörige Zitat ausgegeben.
+\startxmlsetups xml:tei:ref
+	\doifmode{FSBreferenzen}
+		{\FSBgetextref{\FSBgetpath{\xmlatt{#1}{target}}}{\FSBgetref{\xmlatt{#1}{target}}}%
+		}%
+\stopxmlsetups
+
+%% Bei Registereinträgen wird, wenn gewünscht, auch die Zeilennummern exportiert.
+\startxmlsetups xml:tei:index
+	\doifmode{FSBreferenzen}
+		{%
+		%% Falls der Eintrag im Sachapparat steht, .. Prüfung, damit in Register Eintrag kursiv gesetzt werden kann
+		\doifmodeelse{FSBinSachapparat}
+			%% wird er entsprechend exportiert.
+			{\FSBexportelementlineapparatus{index}
+				{\FSBattribute{spanTo}{\xmlatt{#1}{spanTo}}\space
+				\FSBattribute{indexName}{\xmlatt{#1}{indexName}}\space
+				\FSBattribute{corresp}{\xmlatt{#1}{corresp}}\space
+				\FSBattribute{term}{\xmltext{#1}{./term}}\space
+				}
+				{}%
+			}
+			%% Ansonsten wird dies ..
+			%% .. wenn sich der Eintrag nicht im Lemma befindet ..
+			{\doifmodeelse{inLemma}{}%
+				{\FSBexportelementline{index} %% schreibt in dei externe Datei die Daten für die Referenz
+					{\FSBattribute{spanTo}{\xmlatt{#1}{spanTo}}\space %% indes hat das Attribut spanTo
+					\FSBattribute{indexName}{\xmlatt{#1}{indexName}}\space %% ... hat das Attribut indexName etc.
+					\FSBattribute{corresp}{\xmlatt{#1}{corresp}}\space
+					\FSBattribute{term}{\xmltext{#1}{./term}}\space
+					%% .. anders vermerkt.
+					\FSBattribute{location}{text}
+					}
+					{}}%
+			}%
+		}%
+	\ignorespaces%
+	%\removeunwantedspaces%
+	\doifmode{register}
+		{\FSBortsregister[\xmltext{#1}{./term}]{\xmltext{#1}{./term}}}%
+	\startFSBortsregister[\xmlall{#1}{term}]{\xmlall{#1}{term}} *** TODO *****************************************
+	INDEX
+	\xmlflush{#1}
+	\FSBortsregister[\xmlall{#1}{term}]{TEST2}{TEST\xmlflush{#1}}
+	\stopFSBortsregister
+\stopxmlsetups
+
+
+\stopenvironment

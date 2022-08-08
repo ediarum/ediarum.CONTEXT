@@ -1,0 +1,53 @@
+\startenvironment env_referenzen % Zum Einlesen der Referenzen
+\project project_ediarum_context
+
+%% ##################################################################
+%% ##                       Basiselemente                          ##
+%% ##################################################################
+
+%% Generelle Registrierung des xml-Markups
+\startxmlsetups xml:refs:setups
+	%% Dabei muss darauf geachtet werden, dass sich die Bestimmungen hier nicht mit dem eigentlichen Transformationsrichtlinien überschneiden.
+	\xmlsetsetup{refs}{*}{-}
+	\xmlsetsetup{refs}{refs}{xml:refs:root}
+	\xmlsetsetup{refs}{refs/file}{xml:refs:file}
+	\xmlsetsetup{refs}{refs/file/(anchor|index|note)}{xml:refs:file:*}
+\stopxmlsetups
+
+%% Das Setup muss registriert werden
+\xmlregisterdocumentsetup{refs}{xml:refs:setups}
+
+%% ##################################################################
+%% ##                          Elemente                            ##
+%% ##################################################################
+
+%% Die Wurzel wird weiterverarbeitet
+\startxmlsetups xml:refs:root
+	\xmlflush{#1}
+\stopxmlsetups
+
+%% Für alle Dateieinträge ..
+\startxmlsetups xml:refs:file
+	%% .. wird die ID gelesen und das Zitat der Datei vorbereitet.
+	\FSBsetextfileref{\xmlatt{#1}{xml:id}}{\xmlatt{#1}{type} \xmlatt{#1}{idno}}%
+	%% Dann kommen die Elemente.
+	\xmlflush{#1}%
+\stopxmlsetups
+
+%% Für alle Anker ..
+\startxmlsetups xml:refs:file:anchor
+	%% .. wird das entsprechende Zitat vorbereitet.
+	\FSBsetextref{\FSBgetextfileid}{\xmlatt{#1}{xml:id}}{\xmlatt{#1}{line}}%
+\stopxmlsetups
+
+%% Das gleiche gilt für alle Indizierungen ..
+\startxmlsetups xml:refs:file:index
+	\FSBsetextref{\FSBgetextfileid}{\xmlatt{#1}{xml:id}}{\xmlatt{#1}{line}}%
+\stopxmlsetups
+
+%% .. und Noten.
+\startxmlsetups xml:refs:file:note
+	\FSBsetextref{\FSBgetextfileid}{\xmlatt{#1}{xml:id}}{\xmlatt{#1}{line}}%
+\stopxmlsetups
+
+\stopenvironment

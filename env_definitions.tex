@@ -1,0 +1,98 @@
+\startenvironment env_definitions % Diese Datei enthälte alle dateiübergreifenden Definitionen
+\project project_ediarum_context
+
+%% ##################################################################
+%% ##                      lua-Funktionen                          ##
+%% ##################################################################
+
+%% externe Dateien
+\def\FSBfwrite{\LUAwritefile} % schreibt in die gesetzte Datei
+\def\FSBfwriteN{\LUAwritefilelf} % schreibt einen Zeilenumbruch in die gesetzte Datei
+\def\FSBfwriteT{\LUAwritefiletab} % schreibt einen Tabulator in die gesetzte Datei
+\def\FSBnewfile{\LUAnewfile} % erstellt eine neue Datei als zusätzlichen Output
+
+%% Referenzen
+\def\FSBgetextfileid{\LUAgetextfileid} % gibt die aktuelle DateiID aus
+\def\FSBgetextref{\LUAgetextref} % gibt zur angegebenen Datei und Element das Zitat aus
+\def\FSBgetpath{\LUAgetpath} % gibt nur die Pfadangabe der Referenz aus
+\def\FSBgetref{\LUAgetref} % gibt nur das Element der Referenz aus
+\def\FSBsetextfileref{\LUAsetextfileref} % setzt zu einer Datei das Zitat fest
+\def\FSBsetextref{\LUAsetextref} % setzt zu einem Element das Zitat fest
+
+%% sonstiges
+\def\FSBwikitotex{\LUAwikitotex} % interpretiert Wikischreibweise in ConTeXt
+
+%% Zeilennummerierung
+\def\FSBlinerefno{\LUAlinerefno} % definiert einen Zähler für Zeilenmarkierungen
+\def\FSBlinesetup{\LUAlinesetup} % bestimmt wie mit zeilen- und seitenumfassenden Zitatspannen umgegangen wird
+\def\FSBnextlineref{\LUAnextlineref} % erhöht den Zähler für Zeilenmarkierungen
+\def\FSBpagenumber{\LUApagenumber} % gibt die Seitenzahl der Referenz wieder
+\def\FSBstartlinerefebene{\LUAstartlinerefebene} % startet eine neue Verschachtelungsebene
+\def\FSBstoplinerefebene{\LUAstoplinerefebene} % beendet eine Verschachtelungsebene
+
+%% ##################################################################
+%% ##                          Setups                              ##
+%% ##################################################################
+
+%% Schriften
+\def\FSBgesperrt{\SETgesperrt} % schreibt gesperrt
+
+%% Sonderzeichen
+\def\FSBlang{\SETlang} % linke eckige Klammer
+\def\FSBrang{\SETrang} % rechte eckige Klammer
+\def\FSBlfloor{\SETlfloor} % Winkel links unten
+\def\FSBrceil{\SETrceil} % Winkeln rechts oben
+
+%% Sprachen
+\def\FSBgreek{\SETgreek} % für griechische Schrift
+
+%% Paragraphen
+\def\FSBzweispalten{\SETzweispalten} % Zweispaltige Paragraphen
+
+%% Kopfzeile
+\definemarking[FSBbriefnummer] % zur späteren Referenzierung der Briefnummer
+\definemarking[FSBbriefdatum] % zur späteren Referenzierung des Briefdatums
+\definemarking[FSBnotebooktitle] % zur späteren Referenzierung des Titels (hinzu Althof)
+
+%% Zeilennummerierung
+\definelinenumbering[FSBdefaultlinenumbering] % die normale Zeilennummerierung
+\def\FSBlinenumbers{\SETlinenumbers} % gibt die Zeilen der Referenz zurück
+\def\FSBresetlinenumbering{\SETresetlinenumbering} % setzt die Zeilenzählung auf Null zurück
+
+%% Apparate
+\def\FSBtextapparat{\SETtextapparat} % schreibt in den Text und mit Zeilenreferenz und Lemma in den Textapparat
+\def\FSBsachapparat{\SETsachapparat} % schreibt in den Text und mit Zeilenreferenz in den Sachapparat
+\def\FSBfootnote{\SETfootnote} % schreibt eine Fußnote (hinzu Althof)
+\def\FSBleer{\SETleer} % Befehl der die Fußnotennummern löscht
+\def\FSBzeile{\SETzeile} % setzt eine Zeilenmarkierung zur späteren Referenzierung
+\definenote[FSBdofootnote] % schreibte eine Autorenfußnote (hinzu Althof)
+\definenote[FSBdotextapparat] % schreibt in den Textapparat
+\definenote[FSBdosachapparat] % schreibt in den Sachapparat
+
+%% Referenzen
+\def\FSBattribute{\SETattribute} % Vorbereitung der Attribute für den Export
+\def\FSBexportelementline{\SETexportelementline} % Export der Zeilen-ID-Konkordanz für Verweisziele
+\def\FSBexportelementlineapparatus{\SETexportelementlineapparatus} % Export der Zeilen-ID-Konkordanz für Verweisziele im Apparat
+\def\FSBstartreferenzen{\SETstartreferenzen} % startet den Modus für die Verwendung von Referenzen
+\def\FSBstopreferenzen{\SETstopreferenzen} % stoppt den Modus für die Verwendung von Referenzen
+
+%% Register
+\definedescription[FSBregistereintrag]
+\definedescription[FSBregistersubeintrag]
+\definedescription[FSBregistersubsubeintrag]
+
+\defineregister[FSBortsregister] % definiert ein Ortsregister
+
+%% ##################################################################
+%% ##                           Modi                               ##
+%% ##################################################################
+
+%% referenzen % Liest externe Referenzen ein und aktiviert referenzexport
+%% FSBreferenzen % Interner Modus für den Referenzexport in eine Datei und die Verwendung
+%% deckblatt % Erzeugt ein Deckblatt mit den Metadaten
+\enablemode[deckblatt]
+%% FSBlinebreak % Interner Modus für die Behandlung von Zeilenumbrüchen
+%% register % Erzeugt die verschiedenen Register
+%% FSBinSachapparat % Ist innerhalb eines Sachapparateintrags aktiviert.
+
+\stopenvironment
